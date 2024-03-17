@@ -1,0 +1,22 @@
+{
+    "name": "@cdmx/wappler_ac_s3_upload",
+    "version": "0.0.1",
+    "type": "module",
+    "description": "App Connect module for S3 Upload.",
+    "license": "MIT",
+    "author": {
+        "name": "cdmx1",
+        "url": "https://github.com/cdmx1"
+    },
+    "keywords": [
+        "wappler-extension",
+        "app-connect",
+        "s3-upload"
+    ],
+    "dependencies": {
+    },
+    "scripts": {
+        "build": "rollup --config",
+        "publish-dry-run": "npm publish ./dist --access public --dry-run"
+    }
+}
