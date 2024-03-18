@@ -35,6 +35,10 @@ dmx.Component("custom-s3-upload", {
         type: String,
         default: null
     },
+    csv_row_limit: {
+      type: Number,
+      default: 1000
+    },
     prop: {
         type: String,
         default: "url"
@@ -62,6 +66,7 @@ methods: {
       this.upload()
   }
 },
+
   events: {
     start: Event,
     done: Event,
@@ -75,6 +80,7 @@ methods: {
       this.$parse();
     }
   },
+
   render: function (t) {
     this.$node.addEventListener("dragover", this.onDragover.bind(this)), this.$node.addEventListener("drop", this.onDrop.bind(this)), this.$node.addEventListener("click", this.onClick.bind(this)), this.input = document.createElement("input"), this.input.type = "file", this.input.accept = this.props.accept || "*/*", this.input.addEventListener("change", this.onChange.bind(this)), this.xhr = new XMLHttpRequest, this.xhr.addEventListener("abort", this.onAbort.bind(this)), this.xhr.addEventListener("error", this.onError.bind(this)), this.xhr.addEventListener("timeout", this.onTimeout.bind(this)), this.xhr.addEventListener("load", this.onLoad.bind(this)), this.xhr.upload.addEventListener("progress", this.onProgress.bind(this)), this.$parse()
 },
@@ -167,32 +173,29 @@ onProgress: function (t) {
         total: t.total
     })
 },
-    validate: function (t) {
-      if (t.type.toLowerCase() === 'text/csv') {
-        var reader = new FileReader();
-        reader.onload = function(event) {
-            var rows = event.target.result.split('\n');
-            var numRows = rows.length - 1; // Subtract header
-            console.log(numRows)
-            if (numRows > 10) { 
-                console.log("CSV file contains more than 10 rows.");
-                return !1
-            }
-        };
-        reader.readAsText(t);
-    }
-    return !this.props.accept || this.props.accept.split(/\s*,\s*/g).some((function (e) {
-        if ("." == e.charAt(0)) {
-            if (t.name.match(new RegExp("\\" + e + "$", "i"))) return !0
-        } else if (/(audio|video|image)\/\*/i.test(e)) {
-            if (t.type.match(new RegExp("^" + e.replace(/\*/g, ".*") + "$", "i"))) return !0
-        } else if (t.type.toLowerCase() == e.toLowerCase()) return !0;
-        return !1
-    }))
+validate: function (t, context) {
+  if (t.type.toLowerCase() === 'text/csv') {
+      var reader = new FileReader();
+      reader.onload = function(event) {
+          var rows = event.target.result.split('\n');
+          var numRows = rows.length - 1; // Subtract header
+          if (numRows > context.csv_row_limit) {               return !1;
+          }
+      };
+      reader.readAsText(t);
+  }
+  return !this.props.accept || this.props.accept.split(/\s*,\s*/g).some((function (e) {
+    if ("." == e.charAt(0)) {
+        if (t.name.match(new RegExp("\\" + e + "$", "i"))) return !0
+    } else if (/(audio|video|image)\/\*/i.test(e)) {
+        if (t.type.match(new RegExp("^" + e.replace(/\*/g, ".*") + "$", "i"))) return !0
+    } else if (t.type.toLowerCase() == e.toLowerCase()) return !0;
+    return !1
+}))
 },
 
 updateFile: function (t) {
-  if (this.validate(t)) {
+  if (this.validate(t, this)) {
       var e = {
           name: t.name,
           size: t.size,
@@ -247,26 +250,16 @@ upload: function () {
               done: !1
           }
       }), this.dispatchEvent("start");
-      var t = new XMLHttpRequest();
-      var formData = new FormData();
-      formData.append('name', this.file.name);
-      formData.append('file', this.file);
-      t.onabort = this.onAbort.bind(this);
-      t.onerror = this.onError.bind(this);
-      t.onload = this.upload2.bind(this, t);
-      t.open("POST", this.props.url);
-      t.send(formData);
+      var t = new XMLHttpRequest;
+      t.onabort = this.onAbort.bind(this), t.onerror = this.onError.bind(this), t.onload = this.upload2.bind(this, t), t.open("GET", this.props.url + "?name=" + encodeURIComponent(this.file.name)), t.send()
   } else this.onError("No url attribute is set")
 },
 upload2: function (t) {
   try {
       var e = JSON.parse(t.responseText),
           i = e[this.props.prop];
-      if (this.set("data", e), this.xhr.open("PUT", i), 
-      this.xhr.setRequestHeader("Content-Type", this.file.type), -1 != i.indexOf("x-amz-acl=")) 
-      {
-          var s = i.substr(i.indexOf("x-amz-acl=") + 10); - 1 != s.indexOf("&") 
-          && (s = s.substr(0, s.indexOf("&"))), this.xhr.setRequestHeader("x-amz-acl", s)
+      if (this.set("data", e), this.xhr.open("PUT", i), this.xhr.setRequestHeader("Content-Type", this.file.type), -1 != i.indexOf("x-amz-acl=")) {
+        var s = i.substr(i.indexOf("x-amz-acl=") + 10); - 1 != s.indexOf("&") && (s = s.substr(0, s.indexOf("&"))), this.xhr.setRequestHeader("x-amz-acl", s)
       }
       this.xhr.send(this.file)
   } catch (t) {
