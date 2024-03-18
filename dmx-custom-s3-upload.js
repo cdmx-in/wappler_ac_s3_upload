@@ -62,90 +62,6 @@ methods: {
       this.upload()
   }
 },
-
-
-  parseFileData: async function (fieldId) {
-    const parseCSV = (csvData) => {
-      return new Promise((resolve, reject) => {
-        Papa.parse(csvData, {
-          header: true,
-          dynamicTyping: true,
-          complete: function (results) {
-            resolve(results.data);
-          },
-          error: function (error) {
-            reject(error.message);
-          }
-        });
-      });
-    };
-  
-    const parseExcel = (excelData) => {
-      return new Promise((resolve, reject) => {
-        const workbook = new ExcelJS.Workbook();
-        workbook.xlsx.load(excelData)
-          .then(() => {
-            const worksheet = workbook.getWorksheet(1);
-            const data = [];
-            const headers = [];
-  
-            worksheet.eachRow((row, rowNumber) => {
-              if (rowNumber === 1) {
-                row.eachCell((cell) => {
-                  headers.push(cell.value);
-                });
-              } else {
-                const rowData = {};
-                row.eachCell({ includeEmpty: true }, (cell, colNumber) => {
-                  rowData[headers[colNumber - 1]] = cell.value;
-                });
-                data.push(rowData);
-              }
-            });
-  
-            resolve(data);
-          })
-          .catch((error) => {
-            reject(error.message);
-          });
-      });
-    };
-  
-    const fileInput = document.getElementById(fieldId);
-    if (!fileInput) {
-      console.error('Field having field Id: '+fieldId+' not found.');
-      return;
-    }
-    const file = fileInput.files[0];
-    if (!file) {
-      console.error('Please select a file.');
-      return;
-    }
-    const reader = new FileReader();
-    reader.onload = async (e) => {
-      const fileData = e.target.result;
-  
-      try {
-        let parsedData;
-        // Detect the file type based on the file extension or other criteria
-        if (file.name.endsWith('.csv')) {
-          parsedData = await parseCSV(fileData);
-        } else if (file.name.endsWith('.xlsx') || file.type === 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet') {
-          parsedData = await parseExcel(fileData);
-        } else {
-          console.error('Unsupported file type. Please select a CSV or Excel file.');
-          return;
-        }
-  
-        this.set('fileData', parsedData);
-      } catch (error) {
-        console.error('Error parsing file:', error);
-      }
-    };
-  
-    reader.readAsBinaryString(file);
-  },
-
   events: {
     start: Event,
     done: Event,
@@ -159,7 +75,6 @@ methods: {
       this.$parse();
     }
   },
-
   render: function (t) {
     this.$node.addEventListener("dragover", this.onDragover.bind(this)), this.$node.addEventListener("drop", this.onDrop.bind(this)), this.$node.addEventListener("click", this.onClick.bind(this)), this.input = document.createElement("input"), this.input.type = "file", this.input.accept = this.props.accept || "*/*", this.input.addEventListener("change", this.onChange.bind(this)), this.xhr = new XMLHttpRequest, this.xhr.addEventListener("abort", this.onAbort.bind(this)), this.xhr.addEventListener("error", this.onError.bind(this)), this.xhr.addEventListener("timeout", this.onTimeout.bind(this)), this.xhr.addEventListener("load", this.onLoad.bind(this)), this.xhr.upload.addEventListener("progress", this.onProgress.bind(this)), this.$parse()
 },
@@ -332,16 +247,26 @@ upload: function () {
               done: !1
           }
       }), this.dispatchEvent("start");
-      var t = new XMLHttpRequest;
-      t.onabort = this.onAbort.bind(this), t.onerror = this.onError.bind(this), t.onload = this.upload2.bind(this, t), t.open("GET", this.props.url + "?name=" + encodeURIComponent(this.file.name)), t.send()
+      var t = new XMLHttpRequest();
+      var formData = new FormData();
+      formData.append('name', this.file.name);
+      formData.append('file', this.file);
+      t.onabort = this.onAbort.bind(this);
+      t.onerror = this.onError.bind(this);
+      t.onload = this.upload2.bind(this, t);
+      t.open("POST", this.props.url);
+      t.send(formData);
   } else this.onError("No url attribute is set")
 },
 upload2: function (t) {
   try {
       var e = JSON.parse(t.responseText),
           i = e[this.props.prop];
-      if (this.set("data", e), this.xhr.open("PUT", i), this.xhr.setRequestHeader("Content-Type", this.file.type), -1 != i.indexOf("x-amz-acl=")) {
-          var s = i.substr(i.indexOf("x-amz-acl=") + 10); - 1 != s.indexOf("&") && (s = s.substr(0, s.indexOf("&"))), this.xhr.setRequestHeader("x-amz-acl", s)
+      if (this.set("data", e), this.xhr.open("PUT", i), 
+      this.xhr.setRequestHeader("Content-Type", this.file.type), -1 != i.indexOf("x-amz-acl=")) 
+      {
+          var s = i.substr(i.indexOf("x-amz-acl=") + 10); - 1 != s.indexOf("&") 
+          && (s = s.substr(0, s.indexOf("&"))), this.xhr.setRequestHeader("x-amz-acl", s)
       }
       this.xhr.send(this.file)
   } catch (t) {

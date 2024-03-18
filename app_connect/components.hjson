@@ -126,51 +126,13 @@
               "type": "text",
               "defaultValue": ""
             },
-            {
-              "name": "uploadType",
-              "attribute": "is",
-              "replaceTemplate": true,
-              "forceFullRefresh": true,
-              "title": "Type",
-              "type": "droplist",
-              "values": [
-                {
-                  "title": "Single",
-                  "value": "dmx-s3-upload"
-                }
-              ],
-              "defaultValue": ""
-            },
+            
             {
               "name": "scAction",
               "attribute": "url",
-              "title": "Url",
+              "title": "API Url",
               "type": "text",
-              "initDisplay": "none",
-              "defaultValue": ""
-            },
-            {
-              "name": "scActionSite",
-              "attribute": "site",
-              "objectKey": "site",
-              "title": "Site",
-              "type": "text",
-              "initDisplay": "none",
-              "defaultValue": ""
-            },
-            {
-              "name": "scActionTitle",
-              "title": "Server Action",
-              "type": "text",
-              "defaultValue": "",
-              "readonly": true,
-              "noDefaultSave": true
-            },
-            {
-              "name": "scSelectAction",
-              "title": "Select Server Action",
-              "type": "button",
-              "noDefaultSave": true
+              "defaultValue": "/api/upload"
             },
             {
               "name": "s3uploadAccept",
@@ -178,7 +140,7 @@
               "title": "Accept",
               "type": "text",
               "defaultValue": "image/*",
-              "help": "Enter a comma separated list<br />of allowed file extensions or file types<br />Example: <i>.png,.jpg,.gif</i> or <i>image/*</i>"
+              "help": "Enter a comma separated list<br/>of allowed file extensions or file types<br/>Example: <i>.png,.jpg,.gif</i> or <i>image/*</i>"
             },
             {
               "name": "s3uploadAutoupload",
