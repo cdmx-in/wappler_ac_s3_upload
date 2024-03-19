@@ -9,7 +9,7 @@
       "icon": "fa fa-lg fa-cloud-upload-alt",
       "state": "opened",
       "anyParent": true,
-      "template": "<div id=\"@@id@@\" is=\"dmx-custom-s3-upload\" url=\"\" accept=\"image/*\" class=\"text-center border\">\n<p dmx-show=\"!file\">Select file</p>\n<p dmx-show=\"file\">{{file.name}}</p>\n<p dmx-hide=\"state.uploading\">\n<button class=\"btn btn-primary\" dmx-on:click.stop=\"@@id@@.select()\" dmx-show=\"state.idle\">Browse</button>\n<button class=\"btn btn-primary\" dmx-on:click.stop=\"@@id@@.upload()\" dmx-show=\"state.ready\">Upload</button>\n<button class=\"btn btn-danger\" dmx-on:click.stop=\"@@id@@.reset()\" dmx-show=\"state.done\">Reset</button>\n</p>\n<p dmx-show=\"state.uploading\">\nUploading {{uploadProgress.percent}}%\n<button class=\"btn btn-danger\" dmx-on:click.stop=\"@@id@@.abort()\">Abort</button>\n</p>\n</div>",
+      "template": "<div id=\"@@id@@\" is=\"dmx-custom-s3-upload\" url=\"\" accept=\"image/*\" class=\"text-center border\">\n<p dmx-show=\"!file\">Select file</p>\n<p dmx-show=\"file\">{{file.name}}</p>\n<p dmx-hide=\"state.uploading\">\n<button class=\"btn btn-primary\" dmx-on:click.stop=\"@@id@@.select()\" dmx-show=\"state.idle\">Browse</button>\n<button class=\"btn btn-primary\" dmx-on:click.stop=\"@@id@@.upload()\" dmx-show=\"state.ready\">Upload</button>\n<button class=\"btn btn-danger\" dmx-on:click.stop=\"@@id@@.reset()\" dmx-show=\"state.done\">Reset</button>\n</p>\n<p dmx-show=\"state.uploading\">\nUploading {{uploadProgress.percent}}%\n<button class=\"btn btn-danger\" dmx-on:click.stop=\"@@id@@.abort()\">Abort</button>\n</p>\n<p id=\"@@id@@-val-msg\"></p>\n</div>",
       "baseName": "customs3upload",
       "help": "Custom S3 upload component.",
       "dataPick": true,
@@ -126,13 +126,12 @@
               "type": "text",
               "defaultValue": ""
             },
-            
             {
               "name": "scAction",
               "attribute": "url",
-              "title": "API Url",
+              "title": "Url",
               "type": "text",
-              "defaultValue": "/api/upload"
+              "defaultValue": ""
             },
             {
               "name": "s3uploadAccept",
@@ -143,11 +142,48 @@
               "help": "Enter a comma separated list<br/>of allowed file extensions or file types<br/>Example: <i>.png,.jpg,.gif</i> or <i>image/*</i>"
             },
             {
+              "name": "s3uploadAcceptValMsg",
+              "attribute": "accept_val_msg",
+              "title": "Validation Message",
+              "type": "text",
+              "defaultValue": "Invalid file type.",
+              "help": "Enter the validation message to be displayed when accept validations fail."
+            },
+            {
               "name": "s3uploadAutoupload",
               "hasAttribute": "autoupload",
               "title": "Auto Upload",
               "type": "boolean",
               "defaultValue": false
+            }
+          ]
+        },
+        {
+          "group": "📒 CSV Options",
+          "variables": [
+            {
+              "name": "s3uploadCsvRowLimit",
+              "attribute": "csv_row_limit",
+              "title": "CSV Row Limit",
+              "type": "number",
+              "defaultValue": 10,
+              "help": "Enter the csv file row limit. Applicable when uploading csv files."
+            },
+            {
+              "name": "s3uploadCsvRowLimitValMsg",
+              "attribute": "csv_limit_val_msg",
+              "title": "CSV Limit Validation",
+              "type": "text",
+              "defaultValue": "CSV file exceeds row limit. Allowed limit 10"
+              "help": "CSV Limit Validation message."
+            },
+            {
+              "name": "s3uploadCsvNoRecordsValMsg",
+              "attribute": "csv_no_records_val_msg",
+              "title": "CSV Limit Validation",
+              "type": "text",
+              "defaultValue": "CSV file exceeds row limit. Allowed limit 10"
+              "help": "CSV Limit Validation message."
             }
           ]
         }
@@ -205,7 +241,53 @@
       "jsOrder": []
     }
   ],
-  "attributes": [],
+  "attributes": [
+    {
+      "name": "s3-upload-csv-limit",
+      "attributeStartsWith": "dmx-bind",
+      "attribute": "csv_options",
+      "title": "CSV Options",
+      "type": "boolean",
+      "display": "fieldset",
+      "icon": "fa fa-lg fa-chevron-right",
+      "groupTitle": "S3 Upload",
+      "groupIcon": "fa fa-lg fa-cloud-upload-alt",
+      "defaultValue": false,
+      "show": [
+        "s3uploadCsvRowLimit",
+        "s3uploadCsvRowLimitValMsg"
+      ],
+      "noChangeOnHide": true,
+      "groupEnabler": true,
+      "children": [
+        {
+          "name": "s3uploadCsvRowLimit",
+          "attributeStartsWith": "dmx-bind",
+          "attribute": "csv_row_limit",
+          "isValue": true,
+          "dataBindings": true,
+          "title": "CSV Row Limit:",
+          "type": "text",
+          "help": "CSV file row limit.",
+          "initDisplay": "none"
+        },
+        {
+          "name": "s3uploadCsvRowLimitValMsg",
+          "attributeStartsWith": "dmx-bind",
+          "attribute": "csv_limit_val_msg",
+          "isValue": true,
+          "dataBindings": true,
+          "title": "CSV Limit Validation:",
+          "type": "text",
+          "help": "CSV limit validation message.",
+          "initDisplay": "none"
+        }
+      ],
+      "allowedOn": {
+        "dmx-custom-s3-upload": true
+      }
+    },
+  ],
   "events": [
     {
       "name": "start",
