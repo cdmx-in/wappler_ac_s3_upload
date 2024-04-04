@@ -258,6 +258,13 @@ dmx.Component("custom-s3-upload", {
                         }
                     })
                 }
+                else {
+                    context.set({
+                        data: {
+                            output: rows
+                        }
+                    });
+                }
                 updateValidationMessage(validationMessage);
             };
             reader.readAsText(t);

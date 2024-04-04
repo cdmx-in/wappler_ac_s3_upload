@@ -11,96 +11,23 @@
       "anyParent": true,
       "template": "<div id=\"@@id@@\" is=\"dmx-custom-s3-upload\" url=\"\" accept=\"image/*\" class=\"text-center border\">\n<p dmx-show=\"!file\">Select file</p>\n<p dmx-show=\"file\">{{file.name}}</p>\n<p dmx-hide=\"state.uploading\">\n<button class=\"btn btn-primary\" dmx-on:click.stop=\"@@id@@.select()\" dmx-show=\"state.idle\">Browse</button>\n<button class=\"btn btn-primary\" dmx-on:click.stop=\"@@id@@.upload()\" dmx-show=\"state.ready\">Upload</button>\n<button class=\"btn btn-danger\" dmx-on:click.stop=\"@@id@@.reset()\" dmx-show=\"state.done\">Reset</button>\n</p>\n<p dmx-show=\"state.uploading\">\nUploading {{uploadProgress.percent}}%\n<button class=\"btn btn-danger\" dmx-on:click.stop=\"@@id@@.abort()\">Abort</button>\n</p>\n<p id=\"@@id@@-val-msg\"></p>\n</div>",
       "baseName": "customs3upload",
-      "help": "Custom S3 upload component.",
+      "help": "AWS S3 upload component.",
       "dataPick": true,
-      "dataSchema": [
+      "dataScheme": [
         {
           "name": "data",
+          "title": "Data",
           "type": "object",
           "sub": [
             {
               "name": "file",
-              "type": "object",
-              "sub": [
-                {
-                  "name": "name",
-                  "type": "text"
-                },
-                {
-                  "name": "size",
-                  "type": "number"
-                },
-                {
-                  "name": "type",
-                  "type": "text"
-                },
-                {
-                  "name": "date",
-                  "type": "text"
-                },
-                {
-                  "name": "dataUrl",
-                  "type": "text"
-                }
-              ]
+              "title": "file",
+              "type": "object"
             },
             {
-              "name": "state",
-              "type": "object",
-              "sub": [
-                {
-                  "name": "idle",
-                  "type": "boolean"
-                },
-                {
-                  "name": "ready",
-                  "type": "boolean"
-                },
-                {
-                  "name": "uploading",
-                  "type": "boolean"
-                },
-                {
-                  "name": "done",
-                  "type": "boolean"
-                }
-              ]
-            },
-            {
-              "name": "uploadProgress",
-              "type": "object",
-              "sub": [
-                {
-                  "name": "position",
-                  "type": "number"
-                },
-                {
-                  "name": "total",
-                  "type": "number"
-                },
-                {
-                  "name": "percent",
-                  "type": "number"
-                }
-              ]
-            },
-            {
-              "name": "lastError",
-              "type": "object",
-              "sub": [
-                {
-                  "name": "status",
-                  "type": "number"
-                },
-                {
-                  "name": "message",
-                  "type": "text"
-                },
-                {
-                  "name": "response",
-                  "type": "text"
-                }
-              ]
+              "name": "output",
+              "title": "output",
+              "type": "array"
             }
           ]
         }
