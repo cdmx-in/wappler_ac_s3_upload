@@ -297,6 +297,7 @@ dmx.Component("custom-s3-upload", {
                                     response: response
                                 }
                             });
+                          updateValidationMessage();
                         } else {
                             context.set({
                                 data: null,

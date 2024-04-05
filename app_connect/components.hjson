@@ -246,7 +246,7 @@
           "attribute": "val_resp_msg",
           "isValue": true,
           "dataBindings": true,
-          "title": "Validation Msssage:",
+          "title": "Validation Message:",
           "type": "text",
           "help": "Validation message for failed response from Validation URL.",
           "initDisplay": "none"
@@ -279,6 +279,74 @@
           "name": "startValue",
           "attributeStartsWith": "dmx-on",
           "attribute": "start",
+          "isValue": true,
+          "actionsPicker": true,
+          "title": "Action:",
+          "type": "text",
+          "help": "Choose the action to execute.",
+          "defaultValue": "",
+          "initDisplay": "none"
+        }
+      ],
+      "allowedOn": {
+        "dmx-custom-s3-upload": true
+      }
+    },
+    {
+      "name": "done",
+      "attributeStartsWith": "dmx-on",
+      "attribute": "done",
+      "title": "Done",
+      "type": "boolean",
+      "display": "fieldset",
+      "icon": "fa fa-lg fa-chevron-right",
+      "groupTitle": "S3 Upload",
+      "groupIcon": "fa fa-lg fa-cloud-upload-alt",
+      "defaultValue": false,
+      "show": [
+        "doneValue"
+      ],
+      "noChangeOnHide": true,
+      "groupEnabler": true,
+      "children": [
+        {
+          "name": "doneValue",
+          "attributeStartsWith": "dmx-on",
+          "attribute": "done",
+          "isValue": true,
+          "actionsPicker": true,
+          "title": "Action:",
+          "type": "text",
+          "help": "Choose the action to execute.",
+          "defaultValue": "",
+          "initDisplay": "none"
+        }
+      ],
+      "allowedOn": {
+        "dmx-custom-s3-upload": true
+      }
+    },
+    {
+      "name": "success",
+      "attributeStartsWith": "dmx-on",
+      "attribute": "success",
+      "title": "Success",
+      "type": "boolean",
+      "display": "fieldset",
+      "icon": "fa fa-lg fa-chevron-right",
+      "groupTitle": "S3 Upload",
+      "groupIcon": "fa fa-lg fa-cloud-upload-alt",
+      "defaultValue": false,
+      "show": [
+        "successValue"
+      ],
+      "noChangeOnHide": true,
+      "groupEnabler": true,
+      "children": [
+        {
+          "name": "successValue",
+          "attributeStartsWith": "dmx-on",
+          "attribute": "success",
           "isValue": true,
           "actionsPicker": true,
           "title": "Action:",
