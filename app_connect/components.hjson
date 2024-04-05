@@ -61,6 +61,13 @@
               "defaultValue": ""
             },
             {
+              "name": "scValAction",
+              "attribute": "val_url",
+              "title": "Validation Url",
+              "type": "text",
+              "defaultValue": ""
+            },
+            {
               "name": "s3uploadAccept",
               "attribute": "accept",
               "title": "Accept",
@@ -82,35 +89,6 @@
               "title": "Auto Upload",
               "type": "boolean",
               "defaultValue": false
-            }
-          ]
-        },
-        {
-          "group": "📒 CSV Options",
-          "variables": [
-            {
-              "name": "s3uploadCsvRowLimit",
-              "attribute": "csv_row_limit",
-              "title": "CSV Row Limit",
-              "type": "number",
-              "defaultValue": 10,
-              "help": "Enter the csv file row limit. Applicable when uploading csv files."
-            },
-            {
-              "name": "s3uploadCsvRowLimitValMsg",
-              "attribute": "csv_limit_val_msg",
-              "title": "CSV Limit Validation",
-              "type": "text",
-              "defaultValue": "CSV file exceeds row limit. Allowed limit 10"
-              "help": "CSV Limit Validation message."
-            },
-            {
-              "name": "s3uploadCsvNoRecordsValMsg",
-              "attribute": "csv_no_records_val_msg",
-              "title": "CSV Limit Validation",
-              "type": "text",
-              "defaultValue": "CSV file exceeds row limit. Allowed limit 10"
-              "help": "CSV Limit Validation message."
             }
           ]
         }
@@ -170,8 +148,7 @@
   ],
   "attributes": [
     {
-      "name": "s3-upload-csv-limit",
-      "attributeStartsWith": "dmx-bind",
+      "name": "s3-upload-csv-options",
       "attribute": "csv_options",
       "title": "CSV Options",
       "type": "boolean",
@@ -182,7 +159,8 @@
       "defaultValue": false,
       "show": [
         "s3uploadCsvRowLimit",
-        "s3uploadCsvRowLimitValMsg"
+        "s3uploadCsvRowLimitValMsg",
+        "s3uploadCsvNoRecordsValMsg"
       ],
       "noChangeOnHide": true,
       "groupEnabler": true,
@@ -202,11 +180,53 @@
           "name": "s3uploadCsvRowLimitValMsg",
           "attributeStartsWith": "dmx-bind",
           "attribute": "csv_limit_val_msg",
-          "isValue": true,
           "dataBindings": true,
           "title": "CSV Limit Validation:",
           "type": "text",
           "help": "CSV limit validation message.",
+          "initDisplay": "none"
+        },
+        {
+          "name": "s3uploadCsvNoRecordsValMsg",
+          "attributeStartsWith": "dmx-bind",
+          "attribute": "csv_no_records_val_msg",
+          "title": "CSV No Records",
+          "isValue": true,
+          "dataBindings": true,
+          "type": "text",
+          "defaultValue": "CSV no records"
+          "help": "CSV no records message."
+        }
+      ],
+      "allowedOn": {
+        "dmx-custom-s3-upload": true
+      }
+    },
+    {
+      "name": "s3-upload-val-options",
+      "attribute": "val_options",
+      "title": "Validation Options",
+      "type": "boolean",
+      "display": "fieldset",
+      "icon": "fa fa-lg fa-chevron-right",
+      "groupTitle": "S3 Upload",
+      "groupIcon": "fa fa-lg fa-cloud-upload-alt",
+      "defaultValue": false,
+      "show": [
+        "s3uploadValRespMsg"
+      ],
+      "noChangeOnHide": true,
+      "groupEnabler": true,
+      "children": [
+        {
+          "name": "s3uploadValRespMsg",
+          "attributeStartsWith": "dmx-bind",
+          "attribute": "val_resp_msg",
+          "isValue": true,
+          "dataBindings": true,
+          "title": "Validation Msssage:",
+          "type": "text",
+          "help": "Validation message for failed response from Validation URL.",
           "initDisplay": "none"
         }
       ],

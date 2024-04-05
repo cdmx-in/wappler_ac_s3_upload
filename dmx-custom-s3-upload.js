@@ -35,6 +35,10 @@ dmx.Component("custom-s3-upload", {
             type: String,
             default: null
         },
+        val_url: {
+            type: String,
+            default: null
+        },
         prop: {
             type: String,
             default: "url"
@@ -62,6 +66,10 @@ dmx.Component("custom-s3-upload", {
         csv_limit_val_msg: {
             type: String,
             default: "CSV file exceeds row limit. Allowed limit 10"
+        },
+        val_resp_msg: {
+            type: String,
+            default: "Validation failed."
         },
     },
     methods: {
@@ -208,6 +216,7 @@ dmx.Component("custom-s3-upload", {
     validate: function (t, context) {
         var valElement = document.getElementById(`${this.$node.id}-val-msg`);
         var validationMessage = "";
+        var jsonData = [];
         if (t.type.toLowerCase() === 'text/csv') {
             var reader = new FileReader();
             reader.onload = function (event) {
@@ -259,13 +268,61 @@ dmx.Component("custom-s3-upload", {
                     })
                 }
                 else {
-                    context.set({
-                        data: {
-                            output: rows
+                    let xhr = new XMLHttpRequest;
+                    let formData = new FormData();
+                    formData.append('name', context.file.name);
+                    formData.append('file', context.file);
+                    xhr.onabort = context.onAbort.bind(context);
+                    xhr.onerror = context.onError.bind(context);
+                    xhr.open("POST", context.props.val_url);
+                    xhr.onload = function() {
+                        if (xhr.status >= 200 && xhr.status < 300) {
+                            let response = xhr.responseText; 
+                            let headers = rows[0].split(',');
+                            for (let i = 1; i < rows.length; i++) {
+                                let data = rows[i].split(',');
+                                let entry = {};
+                                for (let j = 0; j < headers.length; j++) {
+                                    entry[headers[j]] = data[j];
+                                }
+                                jsonData.push(entry);
+                            }
+                            context.set({
+                                data: {
+                                    output: jsonData
+                                },
+                                lastError: {
+                                    status: xhr.status,
+                                    message: "",
+                                    response: response
+                                }
+                            });
+                        } else {
+                            validationMessage = context.props.val_resp_msg;
+                            context.set({
+                                data: null,
+                                state: {
+                                    idle: !0,
+                                    ready: !1,
+                                    uploading: !1,
+                                    done: !1
+                                },
+                                uploadProgress: {
+                                    position: 0,
+                                    total: 0,
+                                    percent: 0
+                                },
+                                lastError: {
+                                    status: 0,
+                                    message: "",
+                                    response: null
+                                }
+                            })
+                            updateValidationMessage(validationMessage);
                         }
-                    });
+                    };
+                    xhr.send(formData); 
                 }
-                updateValidationMessage(validationMessage);
             };
             reader.readAsText(t);
         } else {
@@ -359,13 +416,9 @@ dmx.Component("custom-s3-upload", {
                 }
             }), this.dispatchEvent("start");
             var t = new XMLHttpRequest;
-            var formData = new FormData();
-            formData.append('name', this.file.name);
-            formData.append('file', this.file);
-
             t.onabort = this.onAbort.bind(this);
             t.onerror = this.onError.bind(this);
-            t.open("POST", this.props.url);
+            t.open("GET", this.props.url + "?name=" + encodeURIComponent(this.file.name)), 
             t.onload = function() {
                 var valElement = document.getElementById(`${this.$node.id}-val-msg`);
                 if (t.status === 200) {
@@ -418,7 +471,7 @@ dmx.Component("custom-s3-upload", {
                     return
                 }
             }.bind(this);
-            t.send(formData);
+            t.send();
         } else this.onError("No url attribute is set")
     },
     upload2: function (t) {
