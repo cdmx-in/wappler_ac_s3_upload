@@ -276,8 +276,8 @@ dmx.Component("custom-s3-upload", {
                     xhr.onerror = context.onError.bind(context);
                     xhr.open("POST", context.props.val_url);
                     xhr.onload = function() {
+                        let response = xhr.responseText; 
                         if (xhr.status >= 200 && xhr.status < 300) {
-                            let response = xhr.responseText; 
                             let headers = rows[0].split(',');
                             for (let i = 1; i < rows.length; i++) {
                                 let data = rows[i].split(',');
@@ -293,12 +293,11 @@ dmx.Component("custom-s3-upload", {
                                 },
                                 lastError: {
                                     status: xhr.status,
-                                    message: "",
+                                    message: response,
                                     response: response
                                 }
                             });
                         } else {
-                            validationMessage = context.props.val_resp_msg;
                             context.set({
                                 data: null,
                                 state: {
@@ -313,12 +312,15 @@ dmx.Component("custom-s3-upload", {
                                     percent: 0
                                 },
                                 lastError: {
-                                    status: 0,
-                                    message: "",
-                                    response: null
+                                    status: xhr.status,
+                                    message: response,
+                                    response: response
                                 }
                             })
+                           dmx.nextTick(function() {
+                            validationMessage = context.props.val_resp_msg.replace(/^"(.*)"$/, '$1');;
                             updateValidationMessage(validationMessage);
+                           }, context);
                         }
                     };
                     xhr.send(formData); 

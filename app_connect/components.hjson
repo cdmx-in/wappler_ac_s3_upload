@@ -30,6 +30,28 @@
               "type": "array"
             }
           ]
+        },
+        {
+          "name": "lastError",
+          "title": "lastError",
+          "type": "object",
+          "sub": [
+            {
+              "name": "status",
+              "title": "status",
+              "type": "number"
+            },
+            {
+              "name": "message",
+              "title": "message",
+              "type": "text"
+            },
+            {
+              "name": "response",
+              "title": "response",
+              "type": "text"
+            }
+          ]
         }
       ],
       "outputType": "object",
