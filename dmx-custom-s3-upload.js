@@ -266,6 +266,9 @@ dmx.Component("custom-s3-upload", {
                             response: null
                         }
                     })
+                    dmx.nextTick(function() {
+                        updateValidationMessage(validationMessage);
+                       }, context);
                 }
                 else {
                     let xhr = new XMLHttpRequest;

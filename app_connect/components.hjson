@@ -203,6 +203,7 @@
           "attributeStartsWith": "dmx-bind",
           "attribute": "csv_limit_val_msg",
           "dataBindings": true,
+          "isValue": true,
           "title": "CSV Limit Validation:",
           "type": "text",
           "help": "CSV limit validation message.",
