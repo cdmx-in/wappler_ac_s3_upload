@@ -294,7 +294,7 @@ dmx.Component("custom-s3-upload", {
                                 lastError: {
                                     status: xhr.status,
                                     message: response,
-                                    response: response
+                                    response: JSON.parse(response)
                                 }
                             });
                           updateValidationMessage();
@@ -315,7 +315,7 @@ dmx.Component("custom-s3-upload", {
                                 lastError: {
                                     status: xhr.status,
                                     message: response,
-                                    response: response
+                                    response: JSON.parse(response)
                                 }
                             })
                            dmx.nextTick(function() {
