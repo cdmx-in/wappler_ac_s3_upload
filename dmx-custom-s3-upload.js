@@ -283,12 +283,14 @@ dmx.Component("custom-s3-upload", {
                         if (xhr.status >= 200 && xhr.status < 300) {
                             let headers = rows[0].split(',');
                             for (let i = 1; i < rows.length; i++) {
-                                let data = rows[i].split(',');
-                                let entry = {};
-                                for (let j = 0; j < headers.length; j++) {
-                                    entry[headers[j]] = data[j];
+                                if (rows[i].length > 0) {
+                                    let data = rows[i].split(',');
+                                    let entry = {};
+                                    for (let j = 0; j < headers.length; j++) {
+                                        entry[headers[j]] = data[j];
+                                    }
+                                    jsonData.push(entry);
                                 }
-                                jsonData.push(entry);
                             }
                             context.set({
                                 data: {
