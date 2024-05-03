@@ -328,7 +328,7 @@
       }
     },
     {
-      "name": "error",
+      "name": "s3Error",
       "attributeStartsWith": "dmx-on",
       "attribute": "error",
       "title": "Error",
@@ -339,7 +339,7 @@
       "groupIcon": "fa fa-lg fa-cloud-upload-alt",
       "defaultValue": false,
       "show": [
-        "successValue"
+        "errorValue"
       ],
       "noChangeOnHide": true,
       "groupEnabler": true,
