@@ -248,7 +248,8 @@ dmx.Component("custom-s3-upload", {
                         }
                     })
                     dmx.nextTick(function () {
-                        validationMessage = context.props.val_resp_msg.replace(/^"(.*)"$/, '$1');;
+                        this.dispatchEvent("error");
+                        validationMessage = context.props.val_resp_msg.replace(/^"(.*)"$/, '$1');
                         updateValidationMessage(validationMessage);
                     }, context);
                     return false;
