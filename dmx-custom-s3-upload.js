@@ -254,6 +254,9 @@ dmx.Component("custom-s3-upload", {
                     }, context);
                     return false;
                 }
+                else {
+                    context.props.autoupload && context.upload()
+                }
             };
             xhr.send(formData);
         }, this);
@@ -382,7 +385,7 @@ dmx.Component("custom-s3-upload", {
                     uploading: !1,
                     done: !1
                 }
-            }), this.props.autoupload && this.upload()
+            })
         }
     },
     abort: function () {
