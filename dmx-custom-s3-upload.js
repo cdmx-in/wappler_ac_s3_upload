@@ -466,6 +466,7 @@ dmx.Component("custom-s3-upload", {
                                 done: !1
                             }
                         });
+                        this.dispatchEvent("error")
                         if (t.status === 400) {
                             jsonResponse = JSON.parse(t.responseText);
                             valElement.innerText = jsonResponse.data.file;
