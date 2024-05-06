@@ -428,10 +428,10 @@ dmx.Component("custom-s3-upload", {
             t.onerror = this.onError.bind(this);
             t.open("GET", this.props.url + "?name=" + encodeURIComponent(this.file.name)),
                 t.onload = function () {
+                    let jsonResponse;
                     var valElement = document.getElementById(`${this.$node.id}-val-msg`);
                     if (t.status === 200) {
                         valElement.style.display = "none";
-                        var jsonResponse;
                         try {
                             jsonResponse = JSON.parse(t.responseText);
                         } catch (error) {
@@ -468,6 +468,11 @@ dmx.Component("custom-s3-upload", {
                                 ready: !1,
                                 uploading: !1,
                                 done: !1
+                            },
+                            lastError: {
+                                status: t.status,
+                                message: "",
+                                response: jsonResponse
                             }
                         });
                         this.dispatchEvent("error")
