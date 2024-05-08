@@ -429,6 +429,11 @@ dmx.Component("custom-s3-upload", {
             t.open("GET", this.props.url + "?name=" + encodeURIComponent(this.file.name)),
                 t.onload = function () {
                     let jsonResponse;
+                    try {
+                        jsonResponse = JSON.parse(t.responseText);
+                    } catch (error) {
+                        console.error("Failed to parse JSON response:", error);
+                    }
                     var valElement = document.getElementById(`${this.$node.id}-val-msg`);
                     if (t.status === 200) {
                         valElement.style.display = "none";
