@@ -127,11 +127,17 @@ dmx.Component("custom-s3-upload", {
         //     this.updateFile(t)
         // }
     },
-    onDragover: function (t) {
-        t.stopPropagation(), t.preventDefault(), t.dataTransfer.dropEffect = 1 == t.dataTransfer.items.length ? "copy" : "none"
+    onDragover(t) {
+        t.stopPropagation(), t.preventDefault(), t.dataTransfer.dropEffect = "copy"
     },
-    onDrop: function (t) {
-        t.stopPropagation(), t.preventDefault(), 1 == t.dataTransfer.files.length && this.updateFile(t.dataTransfer.files[0])
+    onDrop(t) {
+        if (t.stopPropagation(), t.preventDefault(), t.dataTransfer) {
+            var e = t.dataTransfer.files;
+            if (e.length) {
+                var i = t.dataTransfer.items;
+                i && i.length && i[0].webkitGetAsEntry ? this.updateFilesFromItems(i) : this.updateFiles(e)
+            }
+        }
     },
     onClick: function (t) {
         this.input.click()
@@ -139,79 +145,43 @@ dmx.Component("custom-s3-upload", {
     onChange: function (t) {
         this.updateFile(t.target.files[0]), this.input.value = "", this.input.type = "", this.input.type = "file"
     },
-    onAbort: function (t) {
-        this.set({
-            data: null,
-            state: {
-                idle: !1,
-                ready: !0,
-                uploading: !1,
-                done: !1
-            },
-            uploadProgress: {
-                position: 0,
-                total: 0,
-                percent: 0
-            }
-        }), this.dispatchEvent("abort"), this.dispatchEvent("done")
+    onAbort(t, e) {
+        t.info.uploading = !1, t.info.uploaded = 0, t.info.percent = 0, this.updateData(), this.isUploading() || (this.dispatchEvent("abort"), this.dispatchEvent("done"))
     },
-    onError: function (t) {
-        t instanceof ProgressEvent && (t = "Network error, perhaps no CORS set"), this.set({
-            data: null,
-            state: {
-                idle: !1,
-                ready: !0,
-                uploading: !1,
-                done: !1
-            },
-            uploadProgress: {
-                position: 0,
-                total: 0,
-                percent: 0
-            },
-            lastError: {
-                status: 0,
-                message: t,
-                response: null
-            }
-        }), console.error(t), this.dispatchEvent("error"), this.dispatchEvent("done")
+    onError(t, e) {
+        t.url && t.retries ? setTimeout(this.upload3.bind(this, t), 
+        this.nextRetry(t.retries--)) : (e = e instanceof ProgressEvent ? "Network error, perhaps no CORS set" : e.message || e, this.set("lastError", e), 
+        t.info.uploading = !1, t.info.uploaded = 0, 
+        t.info.percent = 0, t.info.error = e, 
+        this.updateData(), this.isUploading() || (this.dispatchEvent("error"), this.dispatchEvent("done")))
     },
     onTimeout: function (t) {
         this.onError("Execution timeout")
     },
-    onLoad: function (t) {
-        this.xhr.status >= 400 ? this.onError(this.xhr.responseText) : (this.set({
-            state: {
-                idle: !1,
-                ready: !1,
-                uploading: !1,
-                done: !0
-            },
-            uploadProgress: {
-                position: this.file.size,
-                total: this.file.size,
-                percent: 100
-            }
-        }), this.dispatchEvent("success"), this.dispatchEvent("done"))
+    onLoad(t, e) {
+        t.xhr.status >= 500 || 429 == t.xhr.status ? t.retries ? setTimeout(this.upload3.bind(this, t), 
+        this.nextRetry(t.retries--)) : this.onError(t, t.xhr.responseText || t.xhr.statusText) : t.xhr.status >= 400 ? this.onError(t, t.xhr.responseText || t.xhr.statusText) : (this.remove(t.file.id), 
+        this.updateData(), this.isUploading() || (this.uploads.length ? this.dispatchEvent("error") : this.dispatchEvent("success"), this.dispatchEvent("done")))
     },
-    onProgress: function (t) {
-        this.set({
-            state: {
-                idle: !1,
-                ready: !1,
-                uploading: !0,
-                done: !1
-            },
-            uploadProgress: {
-                position: t.loaded,
-                total: this.file.size,
-                percent: Math.ceil(t.loaded / t.total * 100)
-            }
-        }), this.dispatchEvent("upload", {
-            lengthComputable: t.lengthComputable,
-            loaded: t.loaded,
-            total: t.total
-        })
+    onProgress(t, e) {
+        t.info.uploaded = e.loaded, t.info.percent = e.lengthComputable ? Math.ceil(e.loaded / e.total * 100) : 0, this.updateData()
+    },
+    resize(t, e) {
+        var i = document.createElement("img"),
+            s = parseInt(this.props["thumb-width"]) || 100,
+            r = parseInt(this.props["thumb-height"]) || 100;
+        i.onload = function () {
+            var t = document.createElement("canvas"),
+                a = t.getContext("2d"),
+                n = i.width,
+                o = i.height;
+            s = Math.min(s, n), r = Math.min(r, o);
+            var d = s / r;
+            (n > s || o > r) && (n / o > d ? n = o * d : o = n / d), t.width = s, t.height = r;
+            var l = (i.width - n) / 2,
+                h = (i.height - o) / 2;
+            a.drawImage(i, l, h, n, o, 0, 0, s, r), e(t.toDataURL())
+        }, i.src = t
     },
     validate: function (t, context) {
         var valElement = document.getElementById(`${this.$node.id}-val-msg`);
@@ -367,67 +337,120 @@ dmx.Component("custom-s3-upload", {
         }
         return !validationMessage;
     },
+    updateData() {
+        this.set("files", [...this.data.files]), this.uploads.length ? this.isUploading() ? this.set("state", {
+            idle: !1,
+            ready: !1,
+            uploading: !0
+        }) : this.set("state", {
+            idle: !1,
+            ready: !0,
+            uploading: !1
+        }) : this.set("state", {
+            idle: !0,
+            ready: !1,
+            uploading: !1
+        })
+    },
     updateFile: function (t) {
-        if (this.validate(t, this)) {
+        if (this.validate(t)) {
+            t.id = ++this.ii;
             var e = {
+                id: t.id,
                 name: t.name,
                 size: t.size,
                 type: t.type,
                 date: (t.lastModified ? new Date(t.lastModified) : t.lastModifiedDate).toISOString(),
+                data: null,
+                uploading: !1,
+                uploaded: 0,
+                percent: 0,
+                ready: !1,
+                error: null,
                 dataUrl: null
-            }; - 1 === t.type.indexOf("image/") || t.reader || (t.reader = new FileReader, t.reader.onload = function (t) {
-                e.dataUrl = t.target.result, dmx.requestUpdate()
-            }.bind(this), t.reader.readAsDataURL(t)), this.file = t, this.set({
-                file: e,
+            }; - 1 === t.type.indexOf("image/") || t.reader ? e.ready = !0 : (t.reader = new FileReader, t.reader.onload = t => {
+                e.dataUrl = t.target.result, this.props.thumbs ? this.resize(e.dataUrl, (function (t) {
+                    e.dataUrl = t, e.ready = !0, this.set("files", [...this.data.files])
+                })) : e.ready = !0, this._updateData()
+            }, t.reader.readAsDataURL(t));
+            var i = {
+                retries: this.maxRetries,
+                info: e,
+                file: t,
+                xhr: null
+            };
+            this.uploads.push(i), this.set({
+                files: this.data.files.concat([e]),
                 state: {
                     idle: !1,
                     ready: !0,
                     uploading: !1,
                     done: !1
                 }
-            })
+            }), this.props.autoupload && (this.isUploading() || this.dispatchEvent("start"), this.upload(i))
         }
+    },
+    updateFilesFromItems(t) {
+        dmx.array(t).forEach((function (t) {
+            var e;
+            t.webkitGetAsEntry && (e = t.webkitGetAsEntry()) ? e.isFile ? this.updateFile(t.getAsFile()) : e.isDirectory && this.updateFilesFromDirectory(e) : t.getAsFile && (t.kind && "file" != t.kind || this.updateFile(t.getAsFile()))
+        }), this)
+    },
+    updateFilesFromDirectory(t, e) {
+        var i = t.createReader(),
+            s = function () {
+                i.readEntries(function (t) {
+                    t.length && t.forEach((function (t) {
+                        t.isFile ? t.file(function (t) {
+                            t.fullPath = e + "/" + t.name, this.updateFile(t)
+                        }.bind(this)) : t.isDirectory && this.updateFilesFromDirectory(t, e + "/" + t.name)
+                    }), this), s()
+                }.bind(this), function (t) {
+                    console.warn(t)
+                }.bind(this))
+            }.bind(this);
+        s()
     },
     abort: function () {
         this.xhr.abort()
     },
-    reset: function () {
-        this.abort(), this.file = null, this.set({
+    reset() {
+        this.abort(), this.uploads = [], this.set({
             data: null,
-            file: null,
+            files: [],
             state: {
                 idle: !0,
                 ready: !1,
-                uploading: !1,
-                done: !1
+                uploading: !1
             },
-            uploadProgress: {
-                position: 0,
-                total: 0,
-                percent: 0
-            },
-            lastError: {
-                status: 0,
-                message: "",
-                response: null
-            }
+            lastError: ""
         })
     },
-    upload: function () {
-        if (this.props.url) {
-            this.set({
-                state: {
-                    idle: !1,
-                    ready: !1,
-                    uploading: !0,
-                    done: !1
-                }
-            }), this.dispatchEvent("start");
-            var t = new XMLHttpRequest;
-            t.onabort = this.onAbort.bind(this);
-            t.onerror = this.onError.bind(this);
-            t.open("GET", this.props.url + "?name=" + encodeURIComponent(this.file.name)),
-                t.onload = function () {
+    remove(t) {
+        var e = this.uploads.findIndex((function (e) {
+            return e.file.id == t
+        })); - 1 != e && (this.uploads[e].xhr && this.uploads[e].xhr.abort(), this.uploads.splice(e, 1), this.data.files.splice(e, 1), this._updateData())
+    },
+    startUpload() {
+        this.dispatchEvent("start"), this.uploads.forEach((function (t) {
+            this.upload(t)
+        }), this)
+    },
+    upload(t) {
+        t.info && t.info.uploading || (this.props.url ? (this.set({
+            state: {
+                idle: !1,
+                ready: !1,
+                uploading: !0,
+                done: !1
+            }
+        }), t.info.uploading = !0, this.set("files", [...this.data.files]),
+            t.xhr = new XMLHttpRequest,
+            t.xhr.onabort = this.onAbort.bind(this, t),
+            t.xhr.onerror = this.onError.bind(this, t),
+            t.xhr.ontimeout = this.onTimeout.bind(this, t),
+            t.xhr.open("GET", this.props.url + "?name=" + encodeURIComponent(this.file.name)),
+                t.xhr.onload = function () {
                     let jsonResponse;
                     try {
                         jsonResponse = JSON.parse(t.responseText);
@@ -435,7 +458,7 @@ dmx.Component("custom-s3-upload", {
                         console.error("Failed to parse JSON response:", error);
                     }
                     var valElement = document.getElementById(`${this.$node.id}-val-msg`);
-                    if (t.status === 200) {
+                    if (t.xhr.status === 200) {
                         valElement.style.display = "none";
                         try {
                             jsonResponse = JSON.parse(t.responseText);
@@ -466,7 +489,7 @@ dmx.Component("custom-s3-upload", {
                             return
                         }
                     } else {
-                        console.error("Failed to sign request. Status code: " + t.status);
+                        console.error("Failed to sign request. Status code: " + t.xhr.status);
                         this.set({
                             state: {
                                 idle: !0,
@@ -481,7 +504,7 @@ dmx.Component("custom-s3-upload", {
                             }
                         });
                         this.dispatchEvent("error")
-                        if (t.status === 400) {
+                        if (t.xhr.status === 400) {
                             jsonResponse = JSON.parse(t.responseText);
                             valElement.innerText = jsonResponse.data.file;
                             valElement.style.color = "red";
@@ -489,8 +512,8 @@ dmx.Component("custom-s3-upload", {
                         }
                         return
                     }
-                }.bind(this);
-            t.send();
+                }.bind(this)
+            t.xhr.send();
         } else this.onError("No url attribute is set")
     },
     upload2: function (t) {
