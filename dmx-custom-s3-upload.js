@@ -71,6 +71,14 @@ dmx.Component("custom-s3-upload", {
             type: String,
             default: "Validation failed."
         },
+        val_api_params: {
+            type: Array,
+            default: []
+        },
+        sign_api_params: {
+            type: Array,
+            default: []
+        },
     },
     methods: {
         abort: function () {
@@ -222,6 +230,10 @@ dmx.Component("custom-s3-upload", {
         dmx.nextTick(function () {
             formData.append('name', context.file.name);
             formData.append('file', context.file);
+            // Append additional parameters from this.props.val_api_params to formData
+            this.props.val_api_params.forEach(function(param) {
+                formData.append(param.key, param.value);
+            });
             xhr.onabort = context.onAbort.bind(context);
             xhr.onerror = context.onError.bind(context);
             xhr.open("POST", context.props.val_url);
@@ -426,71 +438,78 @@ dmx.Component("custom-s3-upload", {
             var t = new XMLHttpRequest;
             t.onabort = this.onAbort.bind(this);
             t.onerror = this.onError.bind(this);
-            t.open("GET", this.props.url + "?name=" + encodeURIComponent(this.file.name)),
-                t.onload = function () {
-                    let jsonResponse;
+            t.open("POST", this.props.url);
+            t.onload = function () {
+                let jsonResponse;
+                try {
+                    jsonResponse = JSON.parse(t.responseText);
+                } catch (error) {
+                    console.error("Failed to parse JSON response:", error);
+                }
+                var valElement = document.getElementById(`${this.$node.id}-val-msg`);
+                if (t.status === 200) {
+                    valElement.style.display = "none";
                     try {
                         jsonResponse = JSON.parse(t.responseText);
                     } catch (error) {
                         console.error("Failed to parse JSON response:", error);
-                    }
-                    var valElement = document.getElementById(`${this.$node.id}-val-msg`);
-                    if (t.status === 200) {
-                        valElement.style.display = "none";
-                        try {
-                            jsonResponse = JSON.parse(t.responseText);
-                        } catch (error) {
-                            console.error("Failed to parse JSON response:", error);
-                            this.set({
-                                state: {
-                                    idle: !0,
-                                    ready: !1,
-                                    uploading: !1,
-                                    done: !1
-                                }
-                            });
-                            return;
-                        }
-                        if (jsonResponse && jsonResponse.url) {
-                            this.upload2(t);
-                        } else {
-                            console.error("Response URL parameter missing.");
-                            this.set({
-                                state: {
-                                    idle: !0,
-                                    ready: !1,
-                                    uploading: !1,
-                                    done: !1
-                                }
-                            });
-                            return
-                        }
-                    } else {
-                        console.error("Failed to sign request. Status code: " + t.status);
                         this.set({
                             state: {
                                 idle: !0,
                                 ready: !1,
                                 uploading: !1,
                                 done: !1
+                            }
+                        });
+                        return;
+                    }
+                    if (jsonResponse && jsonResponse.url) {
+                        this.upload2(t);
+                    } else {
+                        console.error("Response URL parameter missing.");
+                        this.set({
+                            state: {
+                                idle: !0,
+                                ready: !1,
+                                uploading: !1,
+                                done: !1
+                            }
+                        });
+                        return;
+                    }
+                } else {
+                    console.error("Failed to sign request. Status code: " + t.status);
+                    this.set({
+                        state: {
+                            idle: !0,
+                            ready: !1,
+                            uploading: !1,
+                            done: !1
                             },
                             lastError: {
                                 status: t.status,
                                 message: "",
                                 response: jsonResponse
-                            }
-                        });
+                        }
+                    });
                         this.dispatchEvent("error")
-                        if (t.status === 400) {
+                    if (t.status === 400) {
                             jsonResponse = JSON.parse(t.responseText);
                             valElement.innerText = jsonResponse.data.file;
                             valElement.style.color = "red";
                             valElement.style.display = "block";
                         }
                         return
-                    }
-                }.bind(this);
-            t.send();
+                }
+            }.bind(this);
+            t.setRequestHeader("Content-Type", "application/json");
+            var requestBody = {
+                name: this.file.name
+            };
+            this.props.sign_api_params.forEach(function(param) {
+                requestBody[param.key] = param.value;
+            });
+            t.send(JSON.stringify(requestBody));
         } else this.onError("No url attribute is set")
     },
     upload2: function (t) {

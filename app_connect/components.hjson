@@ -113,7 +113,114 @@
               "defaultValue": false
             }
           ]
-        }
+        },
+        {
+          "group": "📒 API Parameters",
+          "variables": [
+            {
+              "name": "valApiParamConfig",
+              "title": "Configure Validate API Params",
+              "attribute": "validation_api_params",
+              "type": "boolean",
+              "defaultValue": false,
+              "icon": "fa fa-lg fa-database",
+              "groupIcon": "fa fa-lg fa-exchange",
+              "display": "fieldset",
+              "show": [
+                "valApiParams"
+              ],
+              "noChangeOnHide": true,
+              "groupEnabler": true,
+              "help": "This allows you to set additonal POST body parameters for validate API."
+              "children": [
+                {
+                  "name": "valApiParams",
+                  "attribute": "dmx-bind:val_api_params",
+                  "title": "POST Params",
+                  "type": "grid",
+                  "dataBindings": true,
+                  "jsonFormat": true,
+                  "encloseBT": true,
+                  "jsonBT": true,
+                  "initDisplay": "none",
+                  "columns": [
+                    {
+                      "field": "key",
+                      "caption": "Key",
+                      "size": "20%",
+                      "editable": {
+                        "type": "text"
+                      }
+                    },
+                    {
+                      "field": "value",
+                      "caption": "Value",
+                      "size": "35%",
+                      "editable": {
+                        "type": "datapicker"
+                      }
+                    },
+                  ],
+                  "newRecord": {
+                    "key": "",
+                    "value": ""
+                  }
+                }
+              ]
+            },
+            {
+              "name": "signApiParamConfig",
+              "title": "Configure Signing API Params",
+              "attribute": "singing_api_params",
+              "type": "boolean",
+              "defaultValue": false,
+              "icon": "fa fa-lg fa-database",
+              "groupIcon": "fa fa-lg fa-exchange",
+              "display": "fieldset",
+              "show": [
+                "signApiParams"
+              ],
+              "noChangeOnHide": true,
+              "groupEnabler": true,
+              "help": "This allows you to set additonal POST body parameters for Signing API."
+              "children": [
+                {
+                  "name": "signApiParams",
+                  "attribute": "dmx-bind:sign_api_params",
+                  "title": "POST Params",
+                  "type": "grid",
+                  "jsonFormat": true,
+                  "encloseBT": true,
+                  "jsonBT": true,
+                  "defaultValue": [],
+                  "initDisplay": "none",
+                  "columns": [
+                    {
+                      "field": "key",
+                      "caption": "Key",
+                      "size": "20%",
+                      "editable": {
+                        "type": "text"
+                      }
+                    },
+                    {
+                      "field": "value",
+                      "caption": "Value",
+                      "size": "35%",
+                      "editable": {
+                        "type": "datapicker"
+                      }
+                    },
+                  ],
+                  "newRecord": {
+                    "key": "",
+                    "value": ""
+                  }
+                }
+              ]
+            }
+          ]
+        },
       ],
       "actionsScheme": [
         {
