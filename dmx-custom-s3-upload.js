@@ -274,78 +274,175 @@ dmx.Component("custom-s3-upload", {
         }, this);
 
         if (t.type.toLowerCase() === 'text/csv') {
-            var reader = new FileReader();
-            reader.onload = function (event) {
-                var rows = event.target.result.split('\n');
-                var numRows = rows.length - 1; // Subtract header
+          var reader = new FileReader();
+          reader.onload = function (event) {
+              var content = event.target.result.trim();
+              // Check if the file is empty
+              if (content.length === 0) {
+                  validationMessage = "CSV file is empty.";
+                  context.set({
+                      data: null,
+                      state: {
+                          idle: true,
+                          ready: false,
+                          uploading: false,
+                          done: false
+                      },
+                      uploadProgress: {
+                          position: 0,
+                          total: 0,
+                          percent: 0
+                      },
+                      lastError: {
+                          status: 0,
+                          message: "",
+                          response: null
+                      }
+                  });
+                  updateValidationMessage(validationMessage);
+                  return;
+              }
+              var rows = content.split('\n').map(row => row.trim());
+              var numRows = rows.length - 1; // Subtract header
                 if (numRows < 2) {
-                    validationMessage = context.props.csv_no_records_val_msg;
-                    context.set({
-                        data: null,
-                        state: {
+                  validationMessage = context.props.csv_no_records_val_msg;
+                  context.set({
+                      data: null,
+                      state: {
                             idle: !0,
                             ready: !1,
                             uploading: !1,
                             done: !1
-                        },
-                        uploadProgress: {
-                            position: 0,
-                            total: 0,
-                            percent: 0
-                        },
-                        lastError: {
-                            status: 0,
-                            message: "",
-                            response: null
-                        }
-                    })
-                    updateValidationMessage(validationMessage);
-                } else if (numRows > context.props.csv_row_limit) {
-                    validationMessage = context.props.csv_limit_val_msg;
-                    context.set({
-                        data: null,
-                        state: {
+                      },
+                      uploadProgress: {
+                          position: 0,
+                          total: 0,
+                          percent: 0
+                      },
+                      lastError: {
+                          status: 0,
+                          message: "",
+                          response: null
+                      }
+                  });
+                  updateValidationMessage(validationMessage);
+                  return;
+              }
+              if (numRows > context.props.csv_row_limit) {
+                  validationMessage = context.props.csv_limit_val_msg;
+                  context.set({
+                      data: null,
+                      state: {
                             idle: !0,
                             ready: !1,
                             uploading: !1,
                             done: !1
-                        },
-                        uploadProgress: {
-                            position: 0,
-                            total: 0,
-                            percent: 0
-                        },
-                        lastError: {
-                            status: 0,
-                            message: "",
-                            response: null
-                        }
-                    })
-                    dmx.nextTick(function () {
-                        updateValidationMessage(validationMessage);
-                    }, context);
-                } else {
-                    let headers = rows[0].split(',');
-                    for (let i = 1; i < rows.length; i++) {
-                        if (rows[i].length > 0) {
-                            let data = rows[i].split(',');
-                            let entry = {};
-                            for (let j = 0; j < headers.length; j++) {
-                                entry[headers[j]] = data[j];
-                            }
-                            jsonData.push(entry);
-                        }
-                    }
-                    context.set({
-                        data: {
-                            output: jsonData
-                        }
-                    });
-                    updateValidationMessage();
-                }
-            };
-            reader.readAsText(t);
-        } else {
+                      },
+                      uploadProgress: {
+                          position: 0,
+                          total: 0,
+                          percent: 0
+                      },
+                      lastError: {
+                          status: 0,
+                          message: "",
+                          response: null
+                      }
+                  });
+                  dmx.nextTick(function () {
+                      updateValidationMessage(validationMessage);
+                  }, context);
+                  return;
+              }
+              let headers = rows[0].split(',');
+              if (headers.length === 0) {
+                  validationMessage = "CSV file is missing a header row.";
+                  context.set({
+                      data: null,
+                      state: {
+                        idle: !0,
+                        ready: !1,
+                        uploading: !1,
+                        done: !1
+                      },
+                      uploadProgress: {
+                          position: 0,
+                          total: 0,
+                          percent: 0
+                      },
+                      lastError: {
+                          status: 0,
+                          message: "",
+                          response: null
+                      }
+                  });
+                  updateValidationMessage(validationMessage);
+                  return;
+              }
+              let headerLength = headers.length;
+              let invalidRecordMessage = '';
+              let jsonData = [];
+              for (let i = 1; i < rows.length; i++) {
+                  if (rows[i].length > 0) {
+                      let data = rows[i].split(',');
+                      // Check for mismatched quotes
+                      let quotesCount = (rows[i].match(/"/g) || []).length;
+                      if (quotesCount % 2 !== 0) {
+                          invalidRecordMessage = `Mismatched quotes on line ${i + 1}`;
+                          break;
+                      }
+                      // Check for invalid record length
+                      if (data.length !== headerLength) {
+                          invalidRecordMessage = `Invalid Record Length: columns length is ${headerLength}, got ${data.length} on line ${i + 1}`;
+                          break;
+                      }
+                      // Check for invalid characters
+                      if (/[^\x00-\x7F]+/.test(rows[i])) {
+                          invalidRecordMessage = `Invalid characters found on line ${i + 1}`;
+                          break;
+                      }
+                      let entry = {};
+                      for (let j = 0; j < headers.length; j++) {
+                          entry[headers[j]] = data[j];
+                      }
+                      jsonData.push(entry);
+                  } else {
+                      invalidRecordMessage = `Empty row found on line ${i + 1}`;
+                      break;
+                  }
+              }
+              if (invalidRecordMessage) {
+                  context.set({
+                      data: null,
+                      state: {
+                        idle: !0,
+                        ready: !1,
+                        uploading: !1,
+                         done: !1
+                      },
+                      uploadProgress: {
+                          position: 0,
+                          total: 0,
+                          percent: 0
+                      },
+                      lastError: {
+                          status: 0,
+                          message: "",
+                          response: null
+                      }
+                  });
+                  updateValidationMessage(invalidRecordMessage);
+              } else {
+                  context.set({
+                      data: {
+                          output: jsonData
+                      }
+                  });
+                  updateValidationMessage();
+              }
+          };
+          reader.readAsText(t);
+      } else {
             if (context.props.accept) {
                 validationMessage = validateMimeType(t, context);
             }
@@ -439,69 +536,69 @@ dmx.Component("custom-s3-upload", {
             t.onabort = this.onAbort.bind(this);
             t.onerror = this.onError.bind(this);
             t.open("POST", this.props.url);
-            t.onload = function () {
-                let jsonResponse;
-                try {
-                    jsonResponse = JSON.parse(t.responseText);
-                } catch (error) {
-                    console.error("Failed to parse JSON response:", error);
-                }
-                var valElement = document.getElementById(`${this.$node.id}-val-msg`);
-                if (t.status === 200) {
-                    valElement.style.display = "none";
+                t.onload = function () {
+                    let jsonResponse;
                     try {
                         jsonResponse = JSON.parse(t.responseText);
                     } catch (error) {
                         console.error("Failed to parse JSON response:", error);
-                        this.set({
-                            state: {
-                                idle: !0,
-                                ready: !1,
-                                uploading: !1,
-                                done: !1
-                            }
-                        });
-                        return;
                     }
-                    if (jsonResponse && jsonResponse.url) {
-                        this.upload2(t);
+                    var valElement = document.getElementById(`${this.$node.id}-val-msg`);
+                    if (t.status === 200) {
+                        valElement.style.display = "none";
+                        try {
+                            jsonResponse = JSON.parse(t.responseText);
+                        } catch (error) {
+                            console.error("Failed to parse JSON response:", error);
+                            this.set({
+                                state: {
+                                    idle: !0,
+                                    ready: !1,
+                                    uploading: !1,
+                                    done: !1
+                                }
+                            });
+                            return;
+                        }
+                        if (jsonResponse && jsonResponse.url) {
+                            this.upload2(t);
+                        } else {
+                            console.error("Response URL parameter missing.");
+                            this.set({
+                                state: {
+                                    idle: !0,
+                                    ready: !1,
+                                    uploading: !1,
+                                    done: !1
+                                }
+                            });
+                        return;
+                        }
                     } else {
-                        console.error("Response URL parameter missing.");
+                        console.error("Failed to sign request. Status code: " + t.status);
                         this.set({
                             state: {
                                 idle: !0,
                                 ready: !1,
                                 uploading: !1,
                                 done: !1
-                            }
-                        });
-                        return;
-                    }
-                } else {
-                    console.error("Failed to sign request. Status code: " + t.status);
-                    this.set({
-                        state: {
-                            idle: !0,
-                            ready: !1,
-                            uploading: !1,
-                            done: !1
                             },
                             lastError: {
                                 status: t.status,
                                 message: "",
                                 response: jsonResponse
-                        }
-                    });
+                            }
+                        });
                         this.dispatchEvent("error")
-                    if (t.status === 400) {
+                        if (t.status === 400) {
                             jsonResponse = JSON.parse(t.responseText);
                             valElement.innerText = jsonResponse.data.file;
                             valElement.style.color = "red";
                             valElement.style.display = "block";
                         }
                         return
-                }
-            }.bind(this);
+                    }
+                }.bind(this);
             t.setRequestHeader("Content-Type", "application/json");
             var requestBody = {
                 name: this.file.name
