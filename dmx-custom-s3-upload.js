@@ -8,8 +8,8 @@ dmx.Actions({
             n.onerror = e, n.onabort = e, n.ontimeout = e, n.onload = t, n.open("PUT", i), n.setRequestHeader("Content-Type", s.type), n.send(s)
         }))
     }
-}),
-dmx.Component("custom-s3-upload", {
+  }),
+  dmx.Component("custom-s3-upload", {
     initialData: {
         data: null,
         file: null,
@@ -94,7 +94,7 @@ dmx.Component("custom-s3-upload", {
             this.upload()
         }
     },
-
+  
     events: {
         start: Event,
         done: Event,
@@ -272,183 +272,201 @@ dmx.Component("custom-s3-upload", {
             };
             xhr.send(formData);
         }, this);
-
+  
         if (t.type.toLowerCase() === 'text/csv') {
-          var reader = new FileReader();
-          reader.onload = function (event) {
-              var content = event.target.result.trim();
-              // Check if the file is empty
-              if (content.length === 0) {
-                  validationMessage = "CSV file is empty.";
-                  context.set({
-                      data: null,
-                      state: {
-                          idle: true,
-                          ready: false,
-                          uploading: false,
-                          done: false
-                      },
-                      uploadProgress: {
-                          position: 0,
-                          total: 0,
-                          percent: 0
-                      },
-                      lastError: {
-                          status: 0,
-                          message: "",
-                          response: null
-                      }
-                  });
-                  updateValidationMessage(validationMessage);
-                  return;
-              }
-              var rows = content.split('\n').map(row => row.trim());
-              var numRows = rows.length - 1; // Subtract header
+            var reader = new FileReader();
+            reader.onload = function (event) {
+                var content = event.target.result.trim();
+                // Check if the file is empty
+                if (content.length === 0) {
+                    validationMessage = "CSV file is empty.";
+                    context.set({
+                        data: null,
+                        state: {
+                            idle: true,
+                            ready: false,
+                            uploading: false,
+                            done: false
+                        },
+                        uploadProgress: {
+                            position: 0,
+                            total: 0,
+                            percent: 0
+                        },
+                        lastError: {
+                            status: 0,
+                            message: "",
+                            response: null
+                        }
+                    });
+                    updateValidationMessage(validationMessage);
+                    return;
+                }
+                var rows = content.split('\n').map(row => row.trim());
+                var numRows = rows.length - 1; // Subtract header
                 if (numRows < 2) {
-                  validationMessage = context.props.csv_no_records_val_msg;
-                  context.set({
-                      data: null,
-                      state: {
+                    validationMessage = context.props.csv_no_records_val_msg;
+                    context.set({
+                        data: null,
+                        state: {
                             idle: !0,
                             ready: !1,
                             uploading: !1,
                             done: !1
-                      },
-                      uploadProgress: {
-                          position: 0,
-                          total: 0,
-                          percent: 0
-                      },
-                      lastError: {
-                          status: 0,
-                          message: "",
-                          response: null
-                      }
-                  });
-                  updateValidationMessage(validationMessage);
-                  return;
-              }
-              if (numRows > context.props.csv_row_limit) {
-                  validationMessage = context.props.csv_limit_val_msg;
-                  context.set({
-                      data: null,
-                      state: {
+                        },
+                        uploadProgress: {
+                            position: 0,
+                            total: 0,
+                            percent: 0
+                        },
+                        lastError: {
+                            status: 0,
+                            message: "",
+                            response: null
+                        }
+                    });
+                    updateValidationMessage(validationMessage);
+                    return;
+                }
+                if (numRows > context.props.csv_row_limit) {
+                    validationMessage = context.props.csv_limit_val_msg;
+                    context.set({
+                        data: null,
+                        state: {
                             idle: !0,
                             ready: !1,
                             uploading: !1,
                             done: !1
-                      },
-                      uploadProgress: {
-                          position: 0,
-                          total: 0,
-                          percent: 0
-                      },
-                      lastError: {
-                          status: 0,
-                          message: "",
-                          response: null
-                      }
-                  });
-                  dmx.nextTick(function () {
-                      updateValidationMessage(validationMessage);
-                  }, context);
-                  return;
-              }
-              let headers = rows[0].split(',');
-              if (headers.length === 0) {
-                  validationMessage = "CSV file is missing a header row.";
-                  context.set({
-                      data: null,
-                      state: {
-                        idle: !0,
-                        ready: !1,
-                        uploading: !1,
-                        done: !1
-                      },
-                      uploadProgress: {
-                          position: 0,
-                          total: 0,
-                          percent: 0
-                      },
-                      lastError: {
-                          status: 0,
-                          message: "",
-                          response: null
-                      }
-                  });
-                  updateValidationMessage(validationMessage);
-                  return;
-              }
-              let headerLength = headers.length;
-              let invalidRecordMessage = '';
-              let jsonData = [];
-              for (let i = 1; i < rows.length; i++) {
-                  if (rows[i].length > 0) {
-                      let data = rows[i].split(',');
-                      // Check for mismatched quotes
-                      let quotesCount = (rows[i].match(/"/g) || []).length;
-                      if (quotesCount % 2 !== 0) {
-                          invalidRecordMessage = `Mismatched quotes on line ${i + 1}`;
-                          break;
-                      }
-                      // Check for invalid record length
-                      if (data.length !== headerLength) {
-                          invalidRecordMessage = `Invalid Record Length: columns length is ${headerLength}, got ${data.length} on line ${i + 1}`;
-                          break;
-                      }
-                      // Check for invalid characters
-                      if (/[^\x00-\x7F]+/.test(rows[i])) {
-                          invalidRecordMessage = `Invalid characters found on line ${i + 1}`;
-                          break;
-                      }
-                      let entry = {};
-                      for (let j = 0; j < headers.length; j++) {
-                          entry[headers[j]] = data[j];
-                      }
-                      jsonData.push(entry);
-                  } else {
-                      invalidRecordMessage = `Empty row found on line ${i + 1}`;
-                      break;
-                  }
-              }
-              if (invalidRecordMessage) {
-                  context.set({
-                      data: null,
-                      state: {
-                        idle: !0,
-                        ready: !1,
-                        uploading: !1,
-                         done: !1
-                      },
-                      uploadProgress: {
-                          position: 0,
-                          total: 0,
-                          percent: 0
-                      },
-                      lastError: {
-                          status: 0,
-                          message: "",
-                          response: null
-                      }
-                  });
-                  updateValidationMessage(invalidRecordMessage);
-              } else {
-                  context.set({
-                      data: {
-                          output: jsonData
-                      }
-                  });
-                  updateValidationMessage();
-              }
-          };
-          reader.readAsText(t);
-      } else {
+                        },
+                        uploadProgress: {
+                            position: 0,
+                            total: 0,
+                            percent: 0
+                        },
+                        lastError: {
+                            status: 0,
+                            message: "",
+                            response: null
+                        }
+                    });
+                    dmx.nextTick(function () {
+                        updateValidationMessage(validationMessage);
+                    }, context);
+                    return;
+                }
+                let headers = rows[0].split(',');
+                if (headers.length === 0) {
+                    validationMessage = "CSV file is missing a header row.";
+                    context.set({
+                        data: null,
+                        state: {
+                            idle: !0,
+                            ready: !1,
+                            uploading: !1,
+                            done: !1
+                        },
+                        uploadProgress: {
+                            position: 0,
+                            total: 0,
+                            percent: 0
+                        },
+                        lastError: {
+                            status: 0,
+                            message: "",
+                            response: null
+                        }
+                    });
+                    updateValidationMessage(validationMessage);
+                    return;
+                }
+                let headerLength = headers.length;
+                let invalidRecordMessages = [];
+                let jsonData = [];
+                for (let i = 1; i < rows.length; i++) {
+                    if (rows[i].length > 0) {
+                        let data = rows[i].split(',');
+                        // Check for mismatched quotes
+                        let quotesCount = (rows[i].match(/"/g) || []).length;
+                        if (quotesCount % 2 !== 0) {
+                            invalidRecordMessages.push(`Mismatched quotes on line ${i + 1}`);
+                        }
+                        // Check for invalid record length
+                        if (data.length !== headerLength) {
+                            invalidRecordMessages.push(`Invalid Record Length: columns length is ${headerLength}, got ${data.length} on line ${i + 1}`);
+                        }
+                        // Check for invalid characters
+                        if (/[^\x00-\x7F]+/.test(rows[i])) {
+                            invalidRecordMessages.push(`Invalid characters found on line ${i + 1}`);
+                        }
+  
+                        let entry = {};
+                        for (let j = 0; j < headers.length; j++) {
+                            entry[headers[j]] = data[j];
+                        }
+                        // Schema validation
+                        if (val_csv_schema) {
+                            val_csv_schema.headers.forEach((headerConfig, index) => {
+                                let value = entry[headerConfig.name];
+                                if (headerConfig.required && (!value || value.trim() === '')) {
+                                    invalidRecordMessages.push(headerConfig.requiredError(headerConfig.name, i + 1, index + 1));
+                                }
+                                if (value) { 
+                                    if (headerConfig.validate && !headerConfig.validate(value)) {
+                                        invalidRecordMessages.push(headerConfig.validateError(headerConfig.name, i + 1, index + 1));
+                                    }
+                                    if (headerConfig.dependentValidate && !headerConfig.dependentValidate(value, entry)) {
+                                        invalidRecordMessages.push(headerConfig.validateError(headerConfig.name, i + 1, index + 1));
+                                    }
+                                }
+                            });
+                        }
+  
+                        if (invalidRecordMessages.length > 0) break;
+                        jsonData.push(entry);
+                    } else {
+                        invalidRecordMessages.push(`Empty row found on line ${i + 1}`);
+                        break;
+                    }
+                }
+                invalidRecordMessage = invalidRecordMessages.join('\n');
+                if (invalidRecordMessage) {
+                    context.set({
+                        data: null,
+                        state: {
+                            idle: !0,
+                            ready: !1,
+                            uploading: !1,
+                            done: !1
+                        },
+                        uploadProgress: {
+                            position: 0,
+                            total: 0,
+                            percent: 0
+                        },
+                        lastError: {
+                            status: 0,
+                            message: "",
+                            response: null
+                        }
+                    });
+                    updateValidationMessage(invalidRecordMessage);
+                } else {
+                    context.set({
+                        data: {
+                            output: jsonData
+                        }
+                    });
+                    updateValidationMessage();
+                }
+            };
+            reader.readAsText(t);
+        } else {
             if (context.props.accept) {
                 validationMessage = validateMimeType(t, context);
             }
             updateValidationMessage(validationMessage);
         }
-
+        
         function validateMimeType(t, context) {
             var acceptTypes = context.props.accept.split(/\s*,\s*/g);
             for (var i = 0; i < acceptTypes.length; i++) {
@@ -463,7 +481,7 @@ dmx.Component("custom-s3-upload", {
             }
             return context.props.accept_val_msg;
         }
-
+  
         function updateValidationMessage(message) {
             if (message) {
                 valElement.innerText = message;
@@ -621,4 +639,5 @@ dmx.Component("custom-s3-upload", {
             this.onError(t)
         }
     }
-});
+  });
+  

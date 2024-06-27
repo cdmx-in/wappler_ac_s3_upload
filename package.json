@@ -1,6 +1,6 @@
 {
     "name": "@cdmx/wappler_ac_s3_upload",
-    "version": "0.2.7",
+    "version": "0.2.8",
     "type": "module",
     "description": "App Connect module for S3 Upload.",
     "license": "MIT",
