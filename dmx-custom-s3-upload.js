@@ -8,7 +8,7 @@ dmx.Actions({
             n.onerror = e, n.onabort = e, n.ontimeout = e, n.onload = t, n.open("PUT", i), n.setRequestHeader("Content-Type", s.type), n.send(s)
         }))
     }
-}),
+  }),
     dmx.Component("custom-s3-upload", {
         initialData: {
             data: null,
@@ -94,7 +94,7 @@ dmx.Actions({
                 this.upload()
             }
         },
-
+  
         events: {
             start: Event,
             done: Event,
@@ -200,7 +200,7 @@ dmx.Actions({
                 };
                 xhr.send(formData);
             }, this);
-
+  
             if (t.type.toLowerCase() === 'text/csv') {
                 var reader = new FileReader();
                 reader.onload = function (event) {
@@ -326,7 +326,7 @@ dmx.Actions({
                             if (/[^\x00-\x7F]+/.test(rows[i])) {
                                 invalidRecordMessages.push(`Invalid characters found on line ${i + 1}`);
                             }
-
+  
                             let entry = {};
                             for (let j = 0; j < headers.length; j++) {
                                 entry[headers[j]] = data[j];
@@ -348,7 +348,7 @@ dmx.Actions({
                                     }
                                 });
                             }
-
+  
                             if (invalidRecordMessages.length > 0) break;
                             jsonData.push(entry);
                         } else {
@@ -394,7 +394,7 @@ dmx.Actions({
                 }
                 updateValidationMessage(validationMessage);
             }
-
+  
             function validateMimeType(t, context) {
                 var acceptTypes = context.props.accept.split(/\s*,\s*/g);
                 for (var i = 0; i < acceptTypes.length; i++) {
@@ -409,7 +409,7 @@ dmx.Actions({
                 }
                 return context.props.accept_val_msg;
             }
-
+  
             function updateValidationMessage(message) {
                 if (message) {
                     valElement.innerText = message;
@@ -479,7 +479,7 @@ dmx.Actions({
                     done: !1
                 }
             }), this.dispatchEvent("start");
-            t = new XMLHttpRequest;
+            const t = new XMLHttpRequest;
             t.onabort = this.abortHandler, 
             t.onerror = this.errorHandler,
             t.open("POST", this.props.url);
@@ -508,7 +508,7 @@ dmx.Actions({
                         return;
                     }
                     if (jsonResponse && jsonResponse.url) {
-                        this.upload2(t);
+                      this.file && this.upload2(t);
                     } else {
                         console.error("Response URL parameter missing.");
                         this.set({
