@@ -332,7 +332,7 @@ dmx.Actions({
                                 entry[headers[j]] = data[j];
                             }
                             // Schema validation
-                            if (val_csv_schema) {
+                            if (val_csv_schema?.headers) {
                                 val_csv_schema.headers.forEach((headerConfig, index) => {
                                     let value = entry[headerConfig.name];
                                     if (headerConfig.required && (!value || value.trim() === '')) {
@@ -469,7 +469,7 @@ dmx.Actions({
                 }
             })
         },
-        upload(t) {
+        upload() {
             if (!this.props.url) return void this.onError("No url attribute is set");
             this.set({
                 state: {
@@ -479,12 +479,11 @@ dmx.Actions({
                     done: !1
                 }
             }), this.dispatchEvent("start");
-            t.xhr = new XMLHttpRequest;
-            t.xhr.onabort = this.onAbort.bind(this, t),
-                t.xhr.onerror = this.onError.bind(this, t),
-                t.xhr.ontimeout = this.onTimeout.bind(this, t),
-                t.xhr.open("POST", this.props.url);
-            t.xhr.onload = function () {
+            t = new XMLHttpRequest;
+            t.onabort = this.abortHandler, 
+            t.onerror = this.errorHandler,
+            t.open("POST", this.props.url);
+            t.onload = function () {
                 let jsonResponse;
                 try {
                     jsonResponse = JSON.parse(t.responseText);
@@ -492,7 +491,7 @@ dmx.Actions({
                     console.error("Failed to parse JSON response:", error);
                 }
                 var valElement = document.getElementById(`${this.$node.id}-val-msg`);
-                if (t.xhr.status === 200) {
+                if (t.status === 200) {
                     valElement.style.display = "none";
                     try {
                         jsonResponse = JSON.parse(t.responseText);
@@ -523,7 +522,7 @@ dmx.Actions({
                         return;
                     }
                 } else {
-                    console.error("Failed to sign request. Status code: " + t.xhr.status);
+                    console.error("Failed to sign request. Status code: " + t.status);
                     this.set({
                         state: {
                             idle: !0,
@@ -538,7 +537,7 @@ dmx.Actions({
                         }
                     });
                     this.dispatchEvent("error")
-                    if (t.xhr.status === 400) {
+                    if (t.status === 400) {
                         jsonResponse = JSON.parse(t.responseText);
                         valElement.innerText = jsonResponse.data.file;
                         valElement.style.color = "red";
@@ -547,14 +546,14 @@ dmx.Actions({
                     return
                 }
             }.bind(this);
-            t.xhr.setRequestHeader("Content-Type", "application/json");
+            t.setRequestHeader("Content-Type", "application/json");
             var requestBody = {
                 name: this.file.name
             };
             this.props.sign_api_params.forEach(function (param) {
                 requestBody[param.key] = param.value;
             });
-            t.xhr.send(JSON.stringify(requestBody));
+            t.send(JSON.stringify(requestBody));
         },
         upload2: function (t) {
             try {
