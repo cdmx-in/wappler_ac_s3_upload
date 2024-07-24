@@ -232,7 +232,7 @@ dmx.Actions({
                     }
                     var rows = content.split('\n').map(row => row.trim());
                     var numRows = rows.length - 1; // Subtract header
-                    if (numRows < 2) {
+                    if (numRows < 1) {
                         validationMessage = context.props.csv_no_records_val_msg;
                         context.set({
                             data: null,
@@ -335,7 +335,8 @@ dmx.Actions({
                             if (val_csv_schema?.headers) {
                                 val_csv_schema.headers.forEach((headerConfig, index) => {
                                     let value = entry[headerConfig.name];
-                                    if (headerConfig.required && (!value || value.trim() === '')) {
+                                    let isConditionMet = headerConfig.condition ? headerConfig.condition(entry) : true;
+                                    if (headerConfig.required && isConditionMet && (!value || value.trim() === '')) {
                                         invalidRecordMessages.push(headerConfig.requiredError(headerConfig.name, i + 1, index + 1));
                                     }
                                     if (value) {

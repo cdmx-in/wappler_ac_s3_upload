@@ -1,0 +1,231 @@
+  function validatePattern(value, pattern) {
+    const regex = new RegExp(pattern);
+    return regex.test(value);
+  }
+
+  function validateEnum(value, enumValues) {
+    return enumValues.includes(value);
+  }
+  const enum_all_countries = ["USA", "Canada", "UK", "Australia"]; // Update with actual values
+  const enum_currencies = ["USD", "CAD", "GBP", "AUD"];
+
+  let val_csv_schema = {
+    headers: [
+      {
+        name: 'Remitter Name',
+        required: false,
+        validate: function (value) {
+          return validatePattern(value, "^(?=.*[a-zA-Z])([a-zA-Z'\\-\\. ]+)$");
+        },
+        validateError: function (headerName, rowNumber, columnNumber) {
+          return `Invalid value for "${headerName}", please check the guide for correct values in row ${rowNumber}, column ${columnNumber}.`;
+        }
+      },
+      {
+        name: 'Remitter Type',
+        required: false,
+        validate: function (value) {
+          return validateEnum(value, ["Individual", "Company"]);
+        },
+        validateError: function (headerName, rowNumber, columnNumber) {
+          return `${headerName} must be one of the allowed values, please check the guide for correct values in row ${rowNumber}, column ${columnNumber}.`;
+        }
+      },
+      {
+        name: 'Remitter Country',
+        required: false,
+        validate: function (value) {
+          return validateEnum(value, enum_all_countries);
+        },
+        validateError: function (headerName, rowNumber, columnNumber) {
+          return `${headerName} must be one of the allowed values, please check the guide for correct values in row ${rowNumber}, column ${columnNumber}.`;
+        }
+      },
+      {
+        name: 'Remitter Bank Name',
+        required: false,
+        validate: function (value) {
+          return validatePattern(value, "^(?=.*[a-zA-Z])([a-zA-Z'\\-\\. ]+)$");
+        },
+        validateError: function (headerName, rowNumber, columnNumber) {
+          return `Invalid value for "${headerName}", please check the guide for correct values in row ${rowNumber}, column ${columnNumber}.`;
+        }
+      },
+      {
+        name: 'Remitter Bank Country',
+        required: false,
+        validate: function (value) {
+          return validateEnum(value, enum_all_countries);
+        },
+        validateError: function (headerName, rowNumber, columnNumber) {
+          return `${headerName} must be one of the allowed values, please check the guide for correct values in row ${rowNumber}, column ${columnNumber}.`;
+        }
+      },
+      {
+        name: 'Remitter Bank Account Number',
+        required: false,
+        condition: function(entry) {
+          return !entry['Remitter Name'];
+        },
+        validate: function (value) {
+          return validatePattern(value, "^[A-Za-z0-9]+$") && value.length <= 50;
+        },
+        validateError: function (headerName, rowNumber, columnNumber) {
+          return `Invalid value for "${headerName}", please check the guide for correct values in row ${rowNumber}, column ${columnNumber}.`;
+        }
+      },
+      {
+        name: 'Remitter Bank Account Holder Name',
+        required: false,
+        validate: function (value) {
+          return validatePattern(value, "^(?=.*[a-zA-Z])([a-zA-Z'\\-\\. ]+)$") && value.length <= 255;
+        },
+        validateError: function (headerName, rowNumber, columnNumber) {
+          return `Invalid value for "${headerName}", please check the guide for correct values in row ${rowNumber}, column ${columnNumber}.`;
+        }
+      },
+      {
+        name: 'Remitter IBAN',
+        required: false,
+        condition: function(entry) {
+          return !entry['Remitter Swift Code'] && !entry['Remitter Bank Account Number'];
+        },
+        validate: function (value) {
+          return typeof value === "string";
+        },
+        validateError: function (headerName, rowNumber, columnNumber) {
+          return `Invalid value for "${headerName}", please check the guide for correct values in row ${rowNumber}, column ${columnNumber}.`;
+        }
+      },
+      {
+        name: 'Remitter Swift Code',
+        required: false,
+        condition: function(entry) {
+          return !entry['Remitter IBAN'];
+        },
+        validate: function (value) {
+          return typeof value === "string";
+        },
+        validateError: function (headerName, rowNumber, columnNumber) {
+          return `Invalid value for "${headerName}", please check the guide for correct values in row ${rowNumber}, column ${columnNumber}.`;
+        }
+      },
+      {
+        name: 'Beneficiary Name',
+        required: true,
+        validate: function (value) {
+          return validatePattern(value, "^(?=.*[a-zA-Z])([a-zA-Z'\\-\\. ]+)$");
+        },
+        validateError: function (headerName, rowNumber, columnNumber) {
+          return `Invalid value for "${headerName}", please check the guide for correct values in row ${rowNumber}, column ${columnNumber}.`;
+        }
+      },
+      {
+        name: 'Beneficiary Type',
+        required: true,
+        validate: function (value) {
+          return validateEnum(value, ["Individual", "Company"]);
+        },
+        validateError: function (headerName, rowNumber, columnNumber) {
+          return `${headerName} must be one of the allowed values, please check the guide for correct values in row ${rowNumber}, column ${columnNumber}.`;
+        }
+      },
+      {
+        name: 'Beneficiary Country',
+        required: true,
+        validateError: function (headerName, rowNumber, columnNumber) {
+          return `${headerName} must be one of the allowed values, please check the guide for correct values in row ${rowNumber}, column ${columnNumber}.`;
+        }
+      },
+      {
+        name: 'Beneficiary Bank Name',
+        required: true,
+        validate: function (value) {
+          return validatePattern(value, "^(?=.*[a-zA-Z])([a-zA-Z'\\-\\. ]+)$");
+        },
+        validateError: function (headerName, rowNumber, columnNumber) {
+          return `Invalid value for "${headerName}", please check the guide for correct values in row ${rowNumber}, column ${columnNumber}.`;
+        }
+      },
+      {
+        name: 'Beneficiary Bank Country',
+        required: true,
+        validate: function (value) {
+          return validateEnum(value, enum_all_countries);
+        },
+        validateError: function (headerName, rowNumber, columnNumber) {
+          return `${headerName} must be one of the allowed values, please check the guide for correct values in row ${rowNumber}, column ${columnNumber}.`;
+        }
+      },
+      {
+        name: 'Beneficiary Bank Account Number',
+        required: true,
+        validate: function (value) {
+          return validatePattern(value, "^[A-Za-z0-9]+$") && value.length <= 50;
+        },
+        validateError: function (headerName, rowNumber, columnNumber) {
+          return `Invalid value for "${headerName}", please check the guide for correct values in row ${rowNumber}, column ${columnNumber}.`;
+        }
+      },
+      {
+        name: 'Beneficiary Bank Account Holder Name',
+        required: true,
+        validate: function (value) {
+          return validatePattern(value, "^(?=.*[a-zA-Z])([a-zA-Z'\\-\\. ]+)$") && value.length <= 255;
+        },
+        validateError: function (headerName, rowNumber, columnNumber) {
+          return `Invalid value for "${headerName}", please check the guide for correct values in row ${rowNumber}, column ${columnNumber}.`;
+        }
+      },
+      {
+        name: 'Beneficiary IBAN',
+        required: false,
+        validate: function (value) {
+          return typeof value === "string";
+        },
+        validateError: function (headerName, rowNumber, columnNumber) {
+          return `Invalid value for "${headerName}", please check the guide for correct values in row ${rowNumber}, column ${columnNumber}.`;
+        }
+      },
+      {
+        name: 'Beneficiary Swift Code',
+        required: false,
+        validate: function (value) {
+          return typeof value === "string";
+        },
+        validateError: function (headerName, rowNumber, columnNumber) {
+          return `Invalid value for "${headerName}", please check the guide for correct values in row ${rowNumber}, column ${columnNumber}.`;
+        }
+      },
+      {
+        name: 'From Currency',
+        required: true,
+        validate: function (value) {
+          return validateEnum(value, enum_currencies);
+        },
+        validateError: function (headerName, rowNumber, columnNumber) {
+          return `${headerName} must be one of the allowed values, please check the guide for correct values in row ${rowNumber}, column ${columnNumber}.`;
+        }
+      },
+      {
+        name: 'To Currency',
+        required: true,
+        validate: function (value) {
+          return validateEnum(value, enum_currencies);
+        },
+        validateError: function (headerName, rowNumber, columnNumber) {
+          return `${headerName} must be one of the allowed values, please check the guide for correct values in row ${rowNumber}, column ${columnNumber}.`;
+        }
+      },
+      {
+        name: 'Amount',
+        required: true,
+        validate: function (value) {
+          return typeof value === "number" && value >= 0.00001;
+        },
+        validateError: function (headerName, rowNumber, columnNumber) {
+          return `Invalid value for "${headerName}", please check the guide for correct values in row ${rowNumber}, column ${columnNumber}.`;
+        }
+      }
+    ]
+  };
