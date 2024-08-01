@@ -158,6 +158,25 @@ dmx.Actions({
             if (context.props.accept) {
                   validationMessage = validateMimeType(t, context);
                   if (!validationMessage == "") {
+                    context.set({
+                      data: null,
+                      state: {
+                          idle: true,
+                          ready: false,
+                          uploading: false,
+                          done: false
+                      },
+                      uploadProgress: {
+                          position: 0,
+                          total: 0,
+                          percent: 0
+                      },
+                      lastError: {
+                          status: 0,
+                          message: "invalid_file_type",
+                          response: null
+                      }
+                    });
                     context.dispatchEvent("error")
                     updateValidationMessage(validationMessage);
                     return false
@@ -682,4 +701,4 @@ dmx.Actions({
                 this.input.type = "",
                 this.input.type = "file"
         }
-    });
+    });  
