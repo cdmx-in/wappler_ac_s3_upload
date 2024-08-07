@@ -461,7 +461,6 @@ dmx.Actions({
         updateFile(t) {
           dmx.nextTick(function () {
             if (!this.validate(t, this)) return;
-          }, this)
             var e = {
                 name: t.name,
                 size: t.size,
@@ -481,6 +480,7 @@ dmx.Actions({
                     done: !1
                 }
             }), this.props.autoupload && this.upload()
+          }, this)
         },
         abort: function () {
             this.xhr.abort()
