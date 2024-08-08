@@ -51,6 +51,10 @@ dmx.Actions({
                 type: String,
                 default: "Invalid file type."
             },
+            file_size_limit: {
+                type: Number,
+                default: 2097152
+            },
             autoupload: {
                 type: Boolean,
                 default: !1
@@ -152,7 +156,34 @@ dmx.Actions({
         validate: function (t, context) {
             var valElement = document.getElementById(`${this.$node.id}-val-msg`);
             var validationMessage = "";
-            var jsonData = [];
+            const fileSizeLimit = context.props.file_size_limit;
+  
+            // Check file size
+            if (t.size > fileSizeLimit) {
+                validationMessage = `File size exceeds the limit of ${fileSizeLimit / (1024 * 1024)}MB.`;
+                context.set({
+                    data: null,
+                    state: {
+                        idle: !0,
+                        ready: !1,
+                        uploading: !1,
+                        done: !1
+                    },
+                    uploadProgress: {
+                        position: 0,
+                        total: 0,
+                        percent: 0
+                    },
+                    lastError: {
+                        status: 0,
+                        message: "file_size_exceeded",
+                        response: null
+                    }
+                });
+                updateValidationMessage(validationMessage);
+                return false;
+            }
+            
             let xhr = new XMLHttpRequest;
             let formData = new FormData();
             if (context.props.accept) {
@@ -702,3 +733,4 @@ dmx.Actions({
                 this.input.type = "file"
         }
     });  
+  

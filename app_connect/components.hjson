@@ -106,6 +106,14 @@
               "help": "Enter the validation message to be displayed when accept validations fail."
             },
             {
+              "name": "s3uploadFileFileLimit",
+              "attribute": "file_size_limit",
+              "title": "File Size Limit",
+              "type": "number",
+              "defaultValue": 2097152,
+              "help": "Enter the file size limit in bytes."
+            },
+            {
               "name": "s3uploadAutoupload",
               "hasAttribute": "autoupload",
               "title": "Auto Upload",
