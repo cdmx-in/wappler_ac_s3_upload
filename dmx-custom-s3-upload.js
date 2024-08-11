@@ -216,6 +216,7 @@ dmx.Actions({
             dmx.nextTick(function () {
                 formData.append('name', context.file.name);
                 formData.append('file', context.file);
+                formData.append('size', context.file.size);
                 // Append additional parameters from this.props.val_api_params to formData
                 this.props.val_api_params.forEach(function (param) {
                     formData.append(param.key, param.value);
@@ -394,7 +395,7 @@ dmx.Actions({
                                                 if (!invalidRecords[i + 1]) {
                                                     invalidRecords[i + 1] = [];
                                                 }
-                                                invalidRecords[i + 1].push(`Column ${index + 1} [${errorMessage}]`);
+                                                invalidRecords[i + 1].push(`C${index + 1} [${errorMessage}]`);
                                             }
                                             if (value) {
                                                 if (headerConfig.validate && !headerConfig.validate(value)) {
@@ -402,14 +403,14 @@ dmx.Actions({
                                                     if (!invalidRecords[i + 1]) {
                                                         invalidRecords[i + 1] = [];
                                                     }
-                                                    invalidRecords[i + 1].push(`Column ${index + 1} [${errorMessage}]`);
+                                                    invalidRecords[i + 1].push(`C${index + 1} [${errorMessage}]`);
                                                 }
                                                 if (headerConfig.dependentValidate && !headerConfig.dependentValidate(value, entry)) {
                                                     const errorMessage = headerConfig.validateError(headerConfig.name, i + 1, index + 1);
                                                     if (!invalidRecords[i + 1]) {
                                                         invalidRecords[i + 1] = [];
                                                     }
-                                                    invalidRecords[i + 1].push(`Column ${index + 1} [${errorMessage}]`);
+                                                    invalidRecords[i + 1].push(`C${index + 1} [${errorMessage}]`);
                                                 }
                                             }
                                         });
@@ -733,4 +734,3 @@ dmx.Actions({
                 this.input.type = "file"
         }
     });  
-  
