@@ -103,6 +103,7 @@ dmx.Actions({
             start: Event,
             done: Event,
             error: Event,
+            invalid: Event,
             abort: Event,
             success: Event,
             upload: ProgressEvent
@@ -247,7 +248,12 @@ dmx.Actions({
                             }
                         })
                         dmx.nextTick(function () {
-                            this.dispatchEvent("error");
+                            if (xhr.status == 400) {
+                               this.dispatchEvent("invalid");
+                            }
+                            else {
+                               this.dispatchEvent("error");
+                            }
                             validationMessage = context.props.val_resp_msg.replace(/^"(.*)"$/, '$1');
                             updateValidationMessage(validationMessage);
                         }, context);
