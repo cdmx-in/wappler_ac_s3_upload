@@ -477,7 +477,7 @@
       }
     },
     {
-      "name": "invalid",
+      "name": "s3invalid",
       "attributeStartsWith": "dmx-on",
       "attribute": "invalid",
       "title": "Invalid",
@@ -511,7 +511,7 @@
       }
     },
     {
-      "name": "success",
+      "name": "s3success",
       "attributeStartsWith": "dmx-on",
       "attribute": "success",
       "title": "Success",
