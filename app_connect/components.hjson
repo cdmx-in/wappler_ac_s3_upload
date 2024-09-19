@@ -179,7 +179,7 @@
             {
               "name": "signApiParamConfig",
               "title": "Configure Signing API Params",
-              "attribute": "singing_api_params",
+              "attribute": "signing_api_params",
               "type": "boolean",
               "defaultValue": false,
               "icon": "fa fa-lg fa-database",
