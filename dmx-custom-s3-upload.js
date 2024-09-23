@@ -155,48 +155,21 @@ dmx.Actions({
                 this.input = null
         },
         validate: function (t, context) {
-            var valElement = document.getElementById(`${this.$node.id}-val-msg`);
-            var validationMessage = "";
-            const fileSizeLimit = context.props.file_size_limit;
-  
-            // Check file size
-            if (t.size > fileSizeLimit) {
-                validationMessage = `File size exceeds the limit of ${fileSizeLimit / (1024 * 1024)}MB.`;
-                context.set({
-                    data: null,
-                    state: {
+          return new Promise((resolve, reject) => {
+              var valElement = document.getElementById(`${this.$node.id}-val-msg`);
+              var validationMessage = "";
+              const fileSizeLimit = context.props.file_size_limit;
+      
+              // Check file size
+              if (t.size > fileSizeLimit) {
+                  validationMessage = `File size exceeds the limit of ${fileSizeLimit / (1024 * 1024)}MB.`;
+                  context.set({
+                      data: null,
+                      state: {
                         idle: !0,
                         ready: !1,
                         uploading: !1,
                         done: !1
-                    },
-                    uploadProgress: {
-                        position: 0,
-                        total: 0,
-                        percent: 0
-                    },
-                    lastError: {
-                        status: 0,
-                        message: "file_size_exceeded",
-                        response: null
-                    }
-                });
-                updateValidationMessage(validationMessage);
-                return false;
-            }
-            
-            let xhr = new XMLHttpRequest;
-            let formData = new FormData();
-            if (context.props.accept) {
-                  validationMessage = validateMimeType(t, context);
-                  if (!validationMessage == "") {
-                    context.set({
-                      data: null,
-                      state: {
-                          idle: true,
-                          ready: false,
-                          uploading: false,
-                          done: false
                       },
                       uploadProgress: {
                           position: 0,
@@ -205,89 +178,115 @@ dmx.Actions({
                       },
                       lastError: {
                           status: 0,
-                          message: "invalid_file_type",
+                          message: "file_size_exceeded",
                           response: null
                       }
-                    });
-                    context.dispatchEvent("error")
-                    updateValidationMessage(validationMessage);
-                    return false
+                  });
+                  updateValidationMessage(validationMessage);
+                  return resolve(false);
+              }
+      
+              let xhr = new XMLHttpRequest();
+              let formData = new FormData();
+              if (context.props.accept) {
+                  validationMessage = validateMimeType(t, context);
+                  if (validationMessage !== "") {
+                      context.set({
+                          data: null,
+                          state: {
+                              idle: true,
+                              ready: false,
+                              uploading: false,
+                              done: false
+                          },
+                          uploadProgress: {
+                              position: 0,
+                              total: 0,
+                              percent: 0
+                          },
+                          lastError: {
+                              status: 0,
+                              message: "invalid_file_type",
+                              response: null
+                          }
+                      });
+                      context.dispatchEvent("error");
+                      updateValidationMessage(validationMessage);
+                      return resolve(false);
                   }
-            }
-            dmx.nextTick(function () {
-                formData.append('name', context.file.name);
-                formData.append('file', context.file);
-                formData.append('size', context.file.size);
-                // Append additional parameters from this.props.val_api_params to formData
-                this.props.val_api_params.forEach(function (param) {
-                    formData.append(param.key, param.value);
-                });
-                xhr.onabort = context.abortHandler;
-                xhr.onerror = context.errorHandler;
-                xhr.open("POST", context.props.val_url);
-                xhr.onload = function () {
-                    let response = xhr.responseText;
-                    if (xhr.status < 200 || xhr.status >= 300) {
-                        context.set({
-                            data: null,
-                            state: {
+              }
+              formData.append('name', context.file.name);
+              formData.append('file', context.file);
+              formData.append('size', context.file.size);
+              // Append additional parameters from this.props.val_api_params to formData
+              this.props.val_api_params.forEach(function (param) {
+                  formData.append(param.key, param.value);
+              });
+              xhr.onabort = context.abortHandler;
+              xhr.onerror = context.errorHandler;
+              xhr.open("POST", context.props.val_url);
+              xhr.onload = function () {
+                  let response = xhr.responseText;
+                  if (xhr.status < 200 || xhr.status >= 300) {
+                      context.set({
+                          data: null,
+                          state: {
                                 idle: !0,
                                 ready: !1,
                                 uploading: !1,
                                 done: !1
-                            },
-                            uploadProgress: {
-                                position: 0,
-                                total: 0,
-                                percent: 0
-                            },
-                            lastError: {
-                                status: xhr.status,
-                                message: response,
-                                response: JSON.parse(response)
-                            }
-                        })
-                        dmx.nextTick(function () {
-                            if (xhr.status == 400) {
-                               this.dispatchEvent("invalid");
-                            }
-                            else {
-                               this.dispatchEvent("error");
-                            }
-                            validationMessage = context.props.val_resp_msg.replace(/^"(.*)"$/, '$1');
-                            updateValidationMessage(validationMessage);
-                        }, context);
-                        return false;
-                    }
-                    else {
+                          },
+                          uploadProgress: {
+                              position: 0,
+                              total: 0,
+                              percent: 0
+                          },
+                          lastError: {
+                              status: xhr.status,
+                              message: response,
+                              response: JSON.parse(response)
+                          }
+                      });
+                      dmx.nextTick(function () {
+                          if (xhr.status === 400) {
+                              this.dispatchEvent("invalid");
+                          } else {
+                              this.dispatchEvent("error");
+                          }
+                          validationMessage = context.props.val_resp_msg.replace(/^"(.*)"$/, '$1');
+                          updateValidationMessage(validationMessage);
+                      }, context);
+                      return resolve(false);
+                  } 
+                  else {
                       if (t.type.toLowerCase() === 'text/csv') {
-                        var reader = new FileReader();
-                        reader.onload = function (event) {
-                            var content = event.target.result.trim();
+                          var reader = new FileReader();
+                          reader.onload = function (event) {
+                              var content = event.target.result.trim();
                             // Check if the file is empty
-                            if (content.length === 0) {
-                                validationMessage = "CSV file is empty.";
-                                context.set({
-                                    data: null,
-                                    state: {
-                                        idle: true,
-                                        ready: false,
-                                        uploading: false,
-                                        done: false
-                                    },
-                                    uploadProgress: {
-                                        position: 0,
-                                        total: 0,
-                                        percent: 0
-                                    },
-                                    lastError: {
-                                        status: 0,
-                                        message: "",
-                                        response: null
-                                    }
-                                });
-                                updateValidationMessage(validationMessage);
-                                return;
+                              if (content.length === 0) {
+                                  validationMessage = "CSV file is empty.";
+                                  context.set({
+                                      data: null,
+                                      state: {
+                                          idle: true,
+                                          ready: false,
+                                          uploading: false,
+                                          done: false
+                                      },
+                                      uploadProgress: {
+                                          position: 0,
+                                          total: 0,
+                                          percent: 0
+                                      },
+                                      lastError: {
+                                          status: 0,
+                                          message: "",
+                                          response: null
+                                      }
+                                  });
+                                  updateValidationMessage(validationMessage);
+                                  return;
                             }
                             var rows = content.split('\n').map(row => row.trim());
                             var numRows = rows.length - 1; // Subtract header
@@ -462,63 +461,71 @@ dmx.Actions({
                                 updateValidationMessage();
                             }
                         context.props.autoupload && context.upload()
-                        };
-                        reader.readAsText(t);
-                    }
-                    }
-                };
-                xhr.send(formData);
-            }, this);
-            function validateMimeType(t, context) {
-                var acceptTypes = context.props.accept.split(/\s*,\s*/g);
-                for (var i = 0; i < acceptTypes.length; i++) {
-                    var e = acceptTypes[i];
-                    if ("." == e.charAt(0)) {
-                        if (t.name.match(new RegExp("\\" + e + "$", "i"))) return "";
-                    } else if (/(audio|video|image)\/\*/i.test(e)) {
-                        if (t.type.match(new RegExp("^" + e.replace(/\*/g, ".*") + "$", "i"))) return "";
-                    } else if (t.type.toLowerCase() == e.toLowerCase()) {
-                        return "";
-                    }
-                }
-                return context.props.accept_val_msg;
-            }
-  
-            function updateValidationMessage(message) {
-                if (message) {
-                    valElement.innerText = message;
-                    valElement.style.color = "red";
-                    valElement.style.display = "block";
-                } else {
-                    valElement.innerText = "";
-                    valElement.style.display = "none";
-                }
-            }
-            return !validationMessage;
-        },
+                          };
+                          reader.readAsText(t);
+                      }
+                  }
+              };
+      
+              xhr.send(formData);
+      
+              function validateMimeType(t, context) {
+                  var acceptTypes = context.props.accept.split(/\s*,\s*/g);
+                  for (var i = 0; i < acceptTypes.length; i++) {
+                      var e = acceptTypes[i];
+                      if ("." == e.charAt(0)) {
+                          if (t.name.match(new RegExp("\\" + e + "$", "i"))) return "";
+                      } else if (/(audio|video|image)\/\*/i.test(e)) {
+                          if (t.type.match(new RegExp("^" + e.replace(/\*/g, ".*") + "$", "i"))) return "";
+                      } else if (t.type.toLowerCase() == e.toLowerCase()) {
+                          return "";
+                      }
+                  }
+                  return context.props.accept_val_msg;
+              }
+      
+              function updateValidationMessage(message) {
+                  if (message) {
+                      valElement.innerText = message;
+                      valElement.style.color = "red";
+                      valElement.style.display = "block";
+                  } else {
+                      valElement.innerText = "";
+                      valElement.style.display = "none";
+                  }
+              }
+              return resolve(!validationMessage);
+          });
+      },      
         updateFile(t) {
-          dmx.nextTick(function () {
-            if (!this.validate(t, this)) return;
-            var e = {
-                name: t.name,
-                size: t.size,
-                type: t.type,
-                date: (t.lastModified ? new Date(t.lastModified) : t.lastModifiedDate).toISOString(),
-                dataUrl: null
+            dmx.nextTick(async function () {
+                var e = {
+                    name: t.name,
+                    size: t.size,
+                    type: t.type,
+                    date: (t.lastModified ? new Date(t.lastModified) : t.lastModifiedDate).toISOString(),
+                    dataUrl: null
             }; - 1 === t.type.indexOf("image/") || t.reader || (t.reader = new FileReader, t.reader.onload = t => {
                 e.dataUrl = t.target.result, this.set("file", {
                     ...e
                 })
             }, t.reader.readAsDataURL(t)), this.file = t, this.set({
-                file: e,
-                state: {
-                    idle: !1,
-                    ready: !0,
-                    uploading: !1,
-                    done: !1
+                    file: e,
+                    state: {
+                        idle: !1,
+                        ready: !0,
+                        uploading: !1,
+                        done: !1
+                    }
+                });
+                // Validate and upload
+                if (!(await this.validate(t, this))) {
+                    return;
                 }
-            }), this.props.autoupload && this.upload()
-          }, this)
+                if (this.props.autoupload) {
+                    this.upload();
+                }
+            }, this);
         },
         abort: function () {
             this.xhr.abort()
