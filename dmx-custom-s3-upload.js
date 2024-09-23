@@ -460,7 +460,6 @@ dmx.Actions({
                                 });
                                 updateValidationMessage();
                             }
-                        context.props.autoupload && context.upload()
                           };
                           reader.readAsText(t);
                       }
