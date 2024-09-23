@@ -463,6 +463,9 @@ dmx.Actions({
                           };
                           reader.readAsText(t);
                       }
+                        else {
+                            resolve(true);
+                        }
                   }
               };
       
@@ -493,7 +496,6 @@ dmx.Actions({
                       valElement.style.display = "none";
                   }
               }
-              return resolve(!validationMessage);
           });
       },      
         updateFile(t) {
