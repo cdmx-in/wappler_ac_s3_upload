@@ -75,6 +75,305 @@
               "type": "text",
               "defaultValue": ""
             },
+            { name: 'uploadType', 
+              attribute: 'is', 
+              replaceTemplate: true, 
+              forceFullRefresh: true, 
+              title: 'Type', 
+              type: 'droplist', 
+              values: [
+                    {title: 'Single', value: 'dmx-custom-s3-upload'},
+                    {title: 'Multi', value: 'dmx-custom-s3-upload-multi'}
+				      ], 
+              defaultValue: ''
+            },
+            {
+              "name": "scAction",
+              "attribute": "url",
+              "title": "Url",
+              "type": "text",
+              "defaultValue": "",
+               "click": s3upload_serverConnectActionSelector
+            },
+            { "name": "scSelectAction", 
+              "title": "Select Server Action", 
+               "type": "button", 
+               "noDefaultSave": true,
+               "click": s3upload_serverConnectActionSelector
+            },
+            {
+              "name": "scValAction",
+              "attribute": "val_url",
+              "title": "Validation Url",
+              "type": "text",
+              "defaultValue": ""
+            },
+            {
+              "name": "s3uploadAccept",
+              "attribute": "accept",
+              "title": "Accept",
+              "type": "text",
+              "defaultValue": "image/*",
+              "help": "Enter a comma separated list<br/>of allowed file extensions or file types<br/>Example: <i>.png,.jpg,.gif</i> or <i>image/*</i>"
+            },
+            {
+              "name": "s3uploadAcceptValMsg",
+              "attribute": "accept_val_msg",
+              "title": "Validation Message",
+              "type": "text",
+              "defaultValue": "Invalid file type.",
+              "help": "Enter the validation message to be displayed when accept validations fail."
+            },
+            {
+              "name": "s3uploadFileFileLimit",
+              "attribute": "file_size_limit",
+              "title": "File Size Limit",
+              "type": "number",
+              "defaultValue": 2097152,
+              "help": "Enter the file size limit in bytes."
+            },
+            {
+              "name": "s3uploadAutoupload",
+              "hasAttribute": "autoupload",
+              "title": "Auto Upload",
+              "type": "boolean",
+              "defaultValue": false
+            }
+          ]
+        },
+        {
+          "group": "📒 API Parameters",
+          "variables": [
+            {
+              "name": "valApiParamConfig",
+              "title": "Configure Validate API Params",
+              "attribute": "validation_api_params",
+              "type": "boolean",
+              "defaultValue": false,
+              "icon": "fa fa-lg fa-database",
+              "groupIcon": "fa fa-lg fa-exchange",
+              "display": "fieldset",
+              "show": [
+                "valApiParams"
+              ],
+              "noChangeOnHide": true,
+              "groupEnabler": true,
+              "help": "This allows you to set additonal POST body parameters for validate API."
+              "children": [
+                {
+                  "name": "valApiParams",
+                  "attribute": "dmx-bind:val_api_params",
+                  "title": "POST Params",
+                  "type": "grid",
+                  "dataBindings": true,
+                  "jsonFormat": true,
+                  "encloseBT": true,
+                  "jsonBT": true,
+                  "initDisplay": "none",
+                  "columns": [
+                    {
+                      "field": "key",
+                      "caption": "Key",
+                      "size": "20%",
+                      "editable": {
+                        "type": "text"
+                      }
+                    },
+                    {
+                      "field": "value",
+                      "caption": "Value",
+                      "size": "35%",
+                      "editable": {
+                        "type": "datapicker"
+                      }
+                    },
+                  ],
+                  "newRecord": {
+                    "key": "",
+                    "value": ""
+                  }
+                }
+              ]
+            },
+            {
+              "name": "signApiParamConfig",
+              "title": "Configure Signing API Params",
+              "attribute": "signing_api_params",
+              "type": "boolean",
+              "defaultValue": false,
+              "icon": "fa fa-lg fa-database",
+              "groupIcon": "fa fa-lg fa-exchange",
+              "display": "fieldset",
+              "show": [
+                "signApiParams"
+              ],
+              "noChangeOnHide": true,
+              "groupEnabler": true,
+              "help": "This allows you to set additonal POST body parameters for Signing API."
+              "children": [
+                {
+                  "name": "signApiParams",
+                  "attribute": "dmx-bind:sign_api_params",
+                  "title": "POST Params",
+                  "type": "grid",
+                  "jsonFormat": true,
+                  "encloseBT": true,
+                  "jsonBT": true,
+                  "defaultValue": [],
+                  "initDisplay": "none",
+                  "columns": [
+                    {
+                      "field": "key",
+                      "caption": "Key",
+                      "size": "20%",
+                      "editable": {
+                        "type": "text"
+                      }
+                    },
+                    {
+                      "field": "value",
+                      "caption": "Value",
+                      "size": "35%",
+                      "editable": {
+                        "type": "datapicker"
+                      }
+                    },
+                  ],
+                  "newRecord": {
+                    "key": "",
+                    "value": ""
+                  }
+                }
+              ]
+            }
+          ]
+        },
+      ],
+      "actionsScheme": [
+        {
+          "addTitle": "Abort",
+          "title": "Abort",
+          "name": "abort",
+          "icon": "fa fa-lg fa-times",
+          "state": "opened",
+          "help": "Abort the S3 Upload Control"
+        },
+        {
+          "addTitle": "Reset",
+          "title": "Reset",
+          "name": "reset",
+          "icon": "fa fa-lg fa-times-circle-o",
+          "state": "opened",
+          "help": "Reset the S3 Upload Control"
+        },
+        {
+          "addTitle": "Select",
+          "title": "Select",
+          "name": "select",
+          "icon": "fa fa-lg fa-times-circle-o",
+          "state": "opened",
+          "help": "Select file in the S3 Upload Control"
+        },
+        {
+          "addTitle": "Upload",
+          "title": "Upload",
+          "name": "upload",
+          "icon": "fa fa-lg fa-times-circle-o",
+          "state": "opened",
+          "help": "Start the Upload of the selected file in the S3 Upload Control"
+        }
+      ],
+      "children": [],
+      "allowed_children": {},
+      "copyFiles": [
+        {
+          "src": "dmx-custom-s3-upload.js",
+          "dst": "js/dmx-custom-s3-upload.js"
+        }
+      ],
+      "linkFiles": [
+        {
+          "src": "js/dmx-custom-s3-upload.js",
+          "type": "js",
+          "defer": true
+        }
+      ],
+      "cssOrder": [],
+      "jsOrder": []
+    },
+    {
+      "type": "dmx-custom-s3-upload-multi",
+      "selector": "dmx-custom-s3-upload-multi, [is=dmx-custom-s3-upload-multi]",
+      "groupTitle": "Forms",
+      "groupIcon": "fa fa-lg fa-file-text-o",
+      "title": "Custom S3 Multi Upload Control: @@id@@",
+      "icon": "fa fa-lg fa-cloud-upload-alt",
+      "state": "opened",
+      "anyParent": true,
+      "template": "<div id=\"@@id@@\" is=\"dmx-custom-s3-upload-multi\" url=\"\" accept=\"image/*\" class=\"text-center border\"><table class=\"table table-bordered\"><tr dmx-hide=\"files.length\"><td>No files selected</td></tr><tr dmx-show=\"files.length\" dmx-repeat=\"files\"><td width=\"50\"><img width=\"50\" dmx-bind:src=\"dataUrl\" dmx-show=\"ready\"></td><td><div>{{ name }}</div><small dmx-show=\"!uploading && !error\">Ready to Upload</small><small dmx-show=\"!uploading && error\" class=\"text-danger\">{{ error }}</small><div class=\"progress\" dmx-show=\"uploading\"><div class=\"progress-bar\" dmx-style:width=\"percent+'%' \"></div></div></td></tr></table><p dmx-hide=\"state.uploading\"><button class=\"btn btn-primary\" dmx-on:click.stop=\"@@id@@.select()\" dmx-show=\"state.idle\">Browse</button><button class=\"btn btn-primary\" dmx-on:click.stop=\"@@id@@.upload()\" dmx-show=\"state.ready\">Upload</button><button class=\"btn btn-danger\" dmx-on:click.stop=\"@@id@@.reset()\" dmx-show=\"state.done\">Reset</button></p><p dmx-show=\"state.uploading\"><button class=\"btn btn-danger\" dmx-on:click.stop=\"@@id@@.abort()\">Abort</button></p></div>",
+      "baseName": "customs3upload",
+      "help": "AWS S3 upload component.",
+      "dataPick": true,
+      "dataSchema": [
+            { "name": "data", 
+               "type": "object", 
+               "sub": dataObj 
+            },
+						{ "name": "files", 
+               type: "array", "sub": [
+                  { "name": "id", "type": "number"},
+                  { "name": "name", "type": "text"},
+                  { "name": "size", "type": "number"},
+                  { "name": "type", "type": "text"},
+                  { "name": "date", "type": "text"},
+                  { "name": "dataUrl", "type": "text"},
+                  { "name": "uploading", "type": "boolean"},
+                  { "name": "uploaded", "type": "number"},
+                  { "name": "percent", "type": "number"},
+                  { "name": "error", "type": "text"}
+						]},
+				    { "name": "state", 
+              "type": "object", 
+              "sub": [
+                {"name": "idle", "type": "boolean"},
+                {"name": "ready", "type": "boolean"},
+                {"name": "uploading", "type": "boolean"},
+				    ]},
+				    {"name": "lastError", "type": "text"}
+          ],
+      "outputType": "object",
+      "dataPick": true,
+      "properties": [
+        {
+          "group": "S3 Upload Control Properties",
+          "variables": [
+            {
+              "name": "theId",
+              "attribute": "id",
+              "title": "ID",
+              "type": "text",
+              "defaultValue": "",
+              "required": true
+            },
+            {
+              "name": "theClass",
+              "attribute": "class",
+              "title": "Class",
+              "type": "text",
+              "defaultValue": ""
+            },
+            { name: 'uploadType', 
+              attribute: 'is', 
+              replaceTemplate: true, 
+              forceFullRefresh: true, 
+              title: 'Type', 
+              type: 'droplist', 
+              values: [
+                    {title: 'Single', value: 'dmx-custom-s3-upload'},
+                    {title: 'Multi', value: 'dmx-custom-s3-upload-multi'}
+				      ], 
+              defaultValue: ''
+            },
             {
               "name": "scAction",
               "attribute": "url",
