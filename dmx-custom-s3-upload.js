@@ -647,7 +647,7 @@ dmx.Actions({
                 }
                 this.xhr.send(this.file)
             } catch (t) {
-                this.errorHandler(t)
+                this.errorHandler(t);
             }
         },
         abortHandler(t) {
@@ -1270,7 +1270,14 @@ dmx.Actions({
                 }
                 t.xhr.send(t.file)
             } catch (e) {
-                t.retries ? (console.log("Retry upload", t), setTimeout(this.upload3.bind(this, t), this.nextRetry(t.retries--))) : (console.log("Error in upload", t, e), this.onError(t, e))
+                if (t.retries) {
+                    console.log("Retry upload", t);
+                    setTimeout(this.upload3.bind(this, t), this.nextRetry(t.retries--));
+                } else {
+                    console.log("Error in upload", t, e);
+                    this.onError(t, e);
+                }
             }
+            
         }
     });
