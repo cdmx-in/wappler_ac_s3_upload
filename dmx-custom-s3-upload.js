@@ -8,7 +8,7 @@ dmx.Actions({
             n.onerror = e, n.onabort = e, n.ontimeout = e, n.onload = t, n.open("PUT", i), n.setRequestHeader("Content-Type", s.type), n.send(s)
         }))
     }
-  }),
+}),
     dmx.Component("custom-s3-upload", {
         initialData: {
             data: null,
@@ -98,7 +98,7 @@ dmx.Actions({
                 this.upload()
             }
         },
-  
+
         events: {
             start: Event,
             done: Event,
@@ -115,9 +115,13 @@ dmx.Actions({
                 this.$node.addEventListener("click", this.clickHandler),
                 this.input = document.createElement("input"),
                 this.input.type = "file",
+                this.input.style.display = "none"
                 this.input.accept = this.props.accept || "*/*",
                 this.input.addEventListener("change",
                     this.changeHandler),
+                document
+                    .getElementById(`${this.$node.id}`)
+                    .appendChild(this.input)
                 this.$parse()
         },
         init() {
@@ -155,349 +159,349 @@ dmx.Actions({
                 this.input = null
         },
         validate: function (t, context) {
-          return new Promise((resolve, reject) => {
-              var valElement = document.getElementById(`${this.$node.id}-val-msg`);
-              var validationMessage = "";
-              const fileSizeLimit = context.props.file_size_limit;
-      
-              // Check file size
-              if (t.size > fileSizeLimit) {
-                  validationMessage = `File size exceeds the limit of ${fileSizeLimit / (1024 * 1024)}MB.`;
-                  context.set({
-                      data: null,
-                      state: {
-                        idle: !0,
-                        ready: !1,
-                        uploading: !1,
-                        done: !1
-                      },
-                      uploadProgress: {
-                          position: 0,
-                          total: 0,
-                          percent: 0
-                      },
-                      lastError: {
-                          status: 0,
-                          message: "file_size_exceeded",
-                          response: null
-                      }
-                  });
-                  updateValidationMessage(validationMessage);
-                  return resolve(false);
-              }
-      
-              let xhr = new XMLHttpRequest();
-              let formData = new FormData();
-              if (context.props.accept) {
-                  validationMessage = validateMimeType(t, context);
-                  if (validationMessage !== "") {
-                      context.set({
-                          data: null,
-                          state: {
-                              idle: true,
-                              ready: false,
-                              uploading: false,
-                              done: false
-                          },
-                          uploadProgress: {
-                              position: 0,
-                              total: 0,
-                              percent: 0
-                          },
-                          lastError: {
-                              status: 0,
-                              message: "invalid_file_type",
-                              response: null
-                          }
-                      });
-                      context.dispatchEvent("error");
-                      updateValidationMessage(validationMessage);
-                      return resolve(false);
-                  }
-              }
-              formData.append('name', context.file.name);
-              formData.append('file', context.file);
-              formData.append('size', context.file.size);
-              // Append additional parameters from this.props.val_api_params to formData
-              this.props.val_api_params.forEach(function (param) {
-                  formData.append(param.key, param.value);
-              });
-              xhr.onabort = context.abortHandler;
-              xhr.onerror = context.errorHandler;
-              xhr.open("POST", context.props.val_url);
-              xhr.onload = function () {
-                  let response = xhr.responseText;
-                  if (xhr.status < 200 || xhr.status >= 300) {
-                      context.set({
-                          data: null,
-                          state: {
+            return new Promise((resolve, reject) => {
+                var valElement = document.getElementById(`${this.$node.id}-val-msg`);
+                var validationMessage = "";
+                const fileSizeLimit = context.props.file_size_limit;
+
+                // Check file size
+                if (t.size > fileSizeLimit) {
+                    validationMessage = `File size exceeds the limit of ${fileSizeLimit / (1024 * 1024)}MB.`;
+                    context.set({
+                        data: null,
+                        state: {
+                            idle: !0,
+                            ready: !1,
+                            uploading: !1,
+                            done: !1
+                        },
+                        uploadProgress: {
+                            position: 0,
+                            total: 0,
+                            percent: 0
+                        },
+                        lastError: {
+                            status: 0,
+                            message: "file_size_exceeded",
+                            response: null
+                        }
+                    });
+                    updateValidationMessage(validationMessage);
+                    return resolve(false);
+                }
+
+                let xhr = new XMLHttpRequest();
+                let formData = new FormData();
+                if (context.props.accept) {
+                    validationMessage = validateMimeType(t, context);
+                    if (validationMessage !== "") {
+                        context.set({
+                            data: null,
+                            state: {
+                                idle: true,
+                                ready: false,
+                                uploading: false,
+                                done: false
+                            },
+                            uploadProgress: {
+                                position: 0,
+                                total: 0,
+                                percent: 0
+                            },
+                            lastError: {
+                                status: 0,
+                                message: "invalid_file_type",
+                                response: null
+                            }
+                        });
+                        context.dispatchEvent("error");
+                        updateValidationMessage(validationMessage);
+                        return resolve(false);
+                    }
+                }
+                formData.append('name', context.file.name);
+                formData.append('file', context.file);
+                formData.append('size', context.file.size);
+                // Append additional parameters from this.props.val_api_params to formData
+                this.props.val_api_params.forEach(function (param) {
+                    formData.append(param.key, param.value);
+                });
+                xhr.onabort = context.abortHandler;
+                xhr.onerror = context.errorHandler;
+                xhr.open("POST", context.props.val_url);
+                xhr.onload = function () {
+                    let response = xhr.responseText;
+                    if (xhr.status < 200 || xhr.status >= 300) {
+                        context.set({
+                            data: null,
+                            state: {
                                 idle: !0,
                                 ready: !1,
                                 uploading: !1,
                                 done: !1
-                          },
-                          uploadProgress: {
-                              position: 0,
-                              total: 0,
-                              percent: 0
-                          },
-                          lastError: {
-                              status: xhr.status,
-                              message: response,
-                              response: JSON.parse(response)
-                          }
-                      });
-                      dmx.nextTick(function () {
-                          if (xhr.status === 400) {
-                              this.dispatchEvent("invalid");
-                          } else {
-                              this.dispatchEvent("error");
-                          }
-                          validationMessage = context.props.val_resp_msg.replace(/^"(.*)"$/, '$1');
-                          updateValidationMessage(validationMessage);
-                      }, context);
-                      return resolve(false);
-                  } 
-                  else {
-                      if (t.type.toLowerCase() === 'text/csv') {
-                          var reader = new FileReader();
-                          reader.onload = function (event) {
-                              var content = event.target.result.trim();
-                            // Check if the file is empty
-                              if (content.length === 0) {
-                                  validationMessage = "CSV file is empty.";
-                                  context.set({
-                                      data: null,
-                                      state: {
-                                          idle: true,
-                                          ready: false,
-                                          uploading: false,
-                                          done: false
-                                      },
-                                      uploadProgress: {
-                                          position: 0,
-                                          total: 0,
-                                          percent: 0
-                                      },
-                                      lastError: {
-                                          status: 0,
-                                          message: "",
-                                          response: null
-                                      }
-                                  });
-                                  updateValidationMessage(validationMessage);
-                                  return;
+                            },
+                            uploadProgress: {
+                                position: 0,
+                                total: 0,
+                                percent: 0
+                            },
+                            lastError: {
+                                status: xhr.status,
+                                message: response,
+                                response: JSON.parse(response)
                             }
-                            var rows = content.split('\n').map(row => row.trim());
-                            var numRows = rows.length - 1; // Subtract header
-                            if (numRows < 1) {
-                                validationMessage = context.props.csv_no_records_val_msg;
-                                context.set({
-                                    data: null,
-                                    state: {
-                                        idle: !0,
-                                        ready: !1,
-                                        uploading: !1,
-                                        done: !1
-                                    },
-                                    uploadProgress: {
-                                        position: 0,
-                                        total: 0,
-                                        percent: 0
-                                    },
-                                    lastError: {
-                                        status: 0,
-                                        message: "",
-                                        response: null
-                                    }
-                                });
-                                updateValidationMessage(validationMessage);
-                                return;
-                            }
-                            if (numRows > context.props.csv_row_limit) {
-                                validationMessage = context.props.csv_limit_val_msg;
-                                context.set({
-                                    data: null,
-                                    state: {
-                                        idle: !0,
-                                        ready: !1,
-                                        uploading: !1,
-                                        done: !1
-                                    },
-                                    uploadProgress: {
-                                        position: 0,
-                                        total: 0,
-                                        percent: 0
-                                    },
-                                    lastError: {
-                                        status: 0,
-                                        message: "",
-                                        response: null
-                                    }
-                                });
-                                dmx.nextTick(function () {
-                                    updateValidationMessage(validationMessage);
-                                }, context);
-                                return;
-                            }
-                            let headers = rows[0].split(',');
-                            if (headers.length === 0) {
-                                validationMessage = "CSV file is missing a header row.";
-                                context.set({
-                                    data: null,
-                                    state: {
-                                        idle: !0,
-                                        ready: !1,
-                                        uploading: !1,
-                                        done: !1
-                                    },
-                                    uploadProgress: {
-                                        position: 0,
-                                        total: 0,
-                                        percent: 0
-                                    },
-                                    lastError: {
-                                        status: 0,
-                                        message: "",
-                                        response: null
-                                    }
-                                });
-                                updateValidationMessage(validationMessage);
-                                return;
-                            }
-                            let headerLength = headers.length;
-                            let invalidRecordMessages = [];
-                            let jsonData = [];
-                            for (let i = 1; i < rows.length; i++) {
-                                if (rows[i].length > 0) {
-                                    let data = rows[i].split(',');
-                                    // Check for mismatched quotes
-                                    let quotesCount = (rows[i].match(/"/g) || []).length;
-                                    if (quotesCount % 2 !== 0) {
-                                        invalidRecordMessages.push(`Mismatched quotes on line ${i + 1}`);
-                                    }
-                                    // Check for invalid record length
-                                    if (data.length !== headerLength) {
-                                        invalidRecordMessages.push(`Invalid Record Length: columns length is ${headerLength}, got ${data.length} on line ${i + 1}`);
-                                    }
-                                    // Check for invalid characters
-                                    if (/[^\x00-\x7F]+/.test(rows[i])) {
-                                        invalidRecordMessages.push(`Invalid characters found on line ${i + 1}`);
-                                    }
-          
-                                    let entry = {};
-                                    for (let j = 0; j < headers.length; j++) {
-                                        entry[headers[j]] = data[j];
-                                    }
-                                    // Schema validation
-                                    let invalidRecords = {};
-                                    if (val_csv_schema?.headers) {
-                                        val_csv_schema.headers.forEach((headerConfig, index) => {
-                                            let value = entry[headerConfig.name];
-                                            let isConditionMet = headerConfig.condition ? headerConfig.condition(entry) : true;
-                                            if (headerConfig.required && isConditionMet && (!value || value.trim() === '')) {
-                                                const errorMessage = headerConfig.requiredError(headerConfig.name, i + 1, index + 1);
-                                                if (!invalidRecords[i + 1]) {
-                                                    invalidRecords[i + 1] = [];
-                                                }
-                                                invalidRecords[i + 1].push(`C${index + 1} [${errorMessage}]`);
-                                            }
-                                            if (value) {
-                                                if (headerConfig.validate && !headerConfig.validate(value)) {
-                                                    const errorMessage = headerConfig.validateError(headerConfig.name, i + 1, index + 1);
-                                                    if (!invalidRecords[i + 1]) {
-                                                        invalidRecords[i + 1] = [];
-                                                    }
-                                                    invalidRecords[i + 1].push(`C${index + 1} [${errorMessage}]`);
-                                                }
-                                                if (headerConfig.dependentValidate && !headerConfig.dependentValidate(value, entry)) {
-                                                    const errorMessage = headerConfig.validateError(headerConfig.name, i + 1, index + 1);
-                                                    if (!invalidRecords[i + 1]) {
-                                                        invalidRecords[i + 1] = [];
-                                                    }
-                                                    invalidRecords[i + 1].push(`C${index + 1} [${errorMessage}]`);
-                                                }
-                                            }
-                                        });
-                                    }
-                                    // Output the errors in row-wise format
-                                    Object.keys(invalidRecords).forEach(rowNumber => {
-                                        invalidRecordMessages.push(`Row ${rowNumber}: ${invalidRecords[rowNumber].join(', ')}`);
-                                    });
-                                    jsonData.push(entry);
-                                } else {
-                                    invalidRecordMessages.push(`Empty row found on line ${i + 1}`);
-                                    break;
-                                }
-                            }
-                            invalidRecordMessage = invalidRecordMessages.join('\n\n');
-                            if (invalidRecordMessage) {
-                                context.set({
-                                    data: null,
-                                    state: {
-                                        idle: !0,
-                                        ready: !1,
-                                        uploading: !1,
-                                        done: !1
-                                    },
-                                    uploadProgress: {
-                                        position: 0,
-                                        total: 0,
-                                        percent: 0
-                                    },
-                                    lastError: {
-                                        status: 0,
-                                        message: "",
-                                        response: null
-                                    }
-                                });
-                                updateValidationMessage(invalidRecordMessage);
+                        });
+                        dmx.nextTick(function () {
+                            if (xhr.status === 400) {
+                                this.dispatchEvent("invalid");
                             } else {
-                                context.set({
-                                    data: {
-                                        output: jsonData
-                                    }
-                                });
-                                updateValidationMessage();
+                                this.dispatchEvent("error");
                             }
-                          };
-                          reader.readAsText(t);
-                      }
+                            validationMessage = context.props.val_resp_msg.replace(/^"(.*)"$/, '$1');
+                            updateValidationMessage(validationMessage);
+                        }, context);
+                        return resolve(false);
+                    }
+                    else {
+                        if (t.type.toLowerCase() === 'text/csv') {
+                            var reader = new FileReader();
+                            reader.onload = function (event) {
+                                var content = event.target.result.trim();
+                                // Check if the file is empty
+                                if (content.length === 0) {
+                                    validationMessage = "CSV file is empty.";
+                                    context.set({
+                                        data: null,
+                                        state: {
+                                            idle: true,
+                                            ready: false,
+                                            uploading: false,
+                                            done: false
+                                        },
+                                        uploadProgress: {
+                                            position: 0,
+                                            total: 0,
+                                            percent: 0
+                                        },
+                                        lastError: {
+                                            status: 0,
+                                            message: "",
+                                            response: null
+                                        }
+                                    });
+                                    updateValidationMessage(validationMessage);
+                                    return;
+                                }
+                                var rows = content.split('\n').map(row => row.trim());
+                                var numRows = rows.length - 1; // Subtract header
+                                if (numRows < 1) {
+                                    validationMessage = context.props.csv_no_records_val_msg;
+                                    context.set({
+                                        data: null,
+                                        state: {
+                                            idle: !0,
+                                            ready: !1,
+                                            uploading: !1,
+                                            done: !1
+                                        },
+                                        uploadProgress: {
+                                            position: 0,
+                                            total: 0,
+                                            percent: 0
+                                        },
+                                        lastError: {
+                                            status: 0,
+                                            message: "",
+                                            response: null
+                                        }
+                                    });
+                                    updateValidationMessage(validationMessage);
+                                    return;
+                                }
+                                if (numRows > context.props.csv_row_limit) {
+                                    validationMessage = context.props.csv_limit_val_msg;
+                                    context.set({
+                                        data: null,
+                                        state: {
+                                            idle: !0,
+                                            ready: !1,
+                                            uploading: !1,
+                                            done: !1
+                                        },
+                                        uploadProgress: {
+                                            position: 0,
+                                            total: 0,
+                                            percent: 0
+                                        },
+                                        lastError: {
+                                            status: 0,
+                                            message: "",
+                                            response: null
+                                        }
+                                    });
+                                    dmx.nextTick(function () {
+                                        updateValidationMessage(validationMessage);
+                                    }, context);
+                                    return;
+                                }
+                                let headers = rows[0].split(',');
+                                if (headers.length === 0) {
+                                    validationMessage = "CSV file is missing a header row.";
+                                    context.set({
+                                        data: null,
+                                        state: {
+                                            idle: !0,
+                                            ready: !1,
+                                            uploading: !1,
+                                            done: !1
+                                        },
+                                        uploadProgress: {
+                                            position: 0,
+                                            total: 0,
+                                            percent: 0
+                                        },
+                                        lastError: {
+                                            status: 0,
+                                            message: "",
+                                            response: null
+                                        }
+                                    });
+                                    updateValidationMessage(validationMessage);
+                                    return;
+                                }
+                                let headerLength = headers.length;
+                                let invalidRecordMessages = [];
+                                let jsonData = [];
+                                for (let i = 1; i < rows.length; i++) {
+                                    if (rows[i].length > 0) {
+                                        let data = rows[i].split(',');
+                                        // Check for mismatched quotes
+                                        let quotesCount = (rows[i].match(/"/g) || []).length;
+                                        if (quotesCount % 2 !== 0) {
+                                            invalidRecordMessages.push(`Mismatched quotes on line ${i + 1}`);
+                                        }
+                                        // Check for invalid record length
+                                        if (data.length !== headerLength) {
+                                            invalidRecordMessages.push(`Invalid Record Length: columns length is ${headerLength}, got ${data.length} on line ${i + 1}`);
+                                        }
+                                        // Check for invalid characters
+                                        if (/[^\x00-\x7F]+/.test(rows[i])) {
+                                            invalidRecordMessages.push(`Invalid characters found on line ${i + 1}`);
+                                        }
+
+                                        let entry = {};
+                                        for (let j = 0; j < headers.length; j++) {
+                                            entry[headers[j]] = data[j];
+                                        }
+                                        // Schema validation
+                                        let invalidRecords = {};
+                                        if (val_csv_schema?.headers) {
+                                            val_csv_schema.headers.forEach((headerConfig, index) => {
+                                                let value = entry[headerConfig.name];
+                                                let isConditionMet = headerConfig.condition ? headerConfig.condition(entry) : true;
+                                                if (headerConfig.required && isConditionMet && (!value || value.trim() === '')) {
+                                                    const errorMessage = headerConfig.requiredError(headerConfig.name, i + 1, index + 1);
+                                                    if (!invalidRecords[i + 1]) {
+                                                        invalidRecords[i + 1] = [];
+                                                    }
+                                                    invalidRecords[i + 1].push(`C${index + 1} [${errorMessage}]`);
+                                                }
+                                                if (value) {
+                                                    if (headerConfig.validate && !headerConfig.validate(value)) {
+                                                        const errorMessage = headerConfig.validateError(headerConfig.name, i + 1, index + 1);
+                                                        if (!invalidRecords[i + 1]) {
+                                                            invalidRecords[i + 1] = [];
+                                                        }
+                                                        invalidRecords[i + 1].push(`C${index + 1} [${errorMessage}]`);
+                                                    }
+                                                    if (headerConfig.dependentValidate && !headerConfig.dependentValidate(value, entry)) {
+                                                        const errorMessage = headerConfig.validateError(headerConfig.name, i + 1, index + 1);
+                                                        if (!invalidRecords[i + 1]) {
+                                                            invalidRecords[i + 1] = [];
+                                                        }
+                                                        invalidRecords[i + 1].push(`C${index + 1} [${errorMessage}]`);
+                                                    }
+                                                }
+                                            });
+                                        }
+                                        // Output the errors in row-wise format
+                                        Object.keys(invalidRecords).forEach(rowNumber => {
+                                            invalidRecordMessages.push(`Row ${rowNumber}: ${invalidRecords[rowNumber].join(', ')}`);
+                                        });
+                                        jsonData.push(entry);
+                                    } else {
+                                        invalidRecordMessages.push(`Empty row found on line ${i + 1}`);
+                                        break;
+                                    }
+                                }
+                                invalidRecordMessage = invalidRecordMessages.join('\n\n');
+                                if (invalidRecordMessage) {
+                                    context.set({
+                                        data: null,
+                                        state: {
+                                            idle: !0,
+                                            ready: !1,
+                                            uploading: !1,
+                                            done: !1
+                                        },
+                                        uploadProgress: {
+                                            position: 0,
+                                            total: 0,
+                                            percent: 0
+                                        },
+                                        lastError: {
+                                            status: 0,
+                                            message: "",
+                                            response: null
+                                        }
+                                    });
+                                    updateValidationMessage(invalidRecordMessage);
+                                } else {
+                                    context.set({
+                                        data: {
+                                            output: jsonData
+                                        }
+                                    });
+                                    updateValidationMessage();
+                                }
+                            };
+                            reader.readAsText(t);
+                        }
                         else {
                             resolve(true);
                         }
-                  }
-              };
-      
-              xhr.send(formData);
-      
-              function validateMimeType(t, context) {
-                  var acceptTypes = context.props.accept.split(/\s*,\s*/g);
-                  for (var i = 0; i < acceptTypes.length; i++) {
-                      var e = acceptTypes[i];
-                      if ("." == e.charAt(0)) {
-                          if (t.name.match(new RegExp("\\" + e + "$", "i"))) return "";
-                      } else if (/(audio|video|image)\/\*/i.test(e)) {
-                          if (t.type.match(new RegExp("^" + e.replace(/\*/g, ".*") + "$", "i"))) return "";
-                      } else if (t.type.toLowerCase() == e.toLowerCase()) {
-                          return "";
-                      }
-                  }
-                  return context.props.accept_val_msg;
-              }
-      
-              function updateValidationMessage(message) {
-                  if (message) {
-                      valElement.innerText = message;
-                      valElement.style.color = "red";
-                      valElement.style.display = "block";
-                  } else {
-                      valElement.innerText = "";
-                      valElement.style.display = "none";
-                  }
-              }
-          });
-      },      
+                    }
+                };
+
+                xhr.send(formData);
+
+                function validateMimeType(t, context) {
+                    var acceptTypes = context.props.accept.split(/\s*,\s*/g);
+                    for (var i = 0; i < acceptTypes.length; i++) {
+                        var e = acceptTypes[i];
+                        if ("." == e.charAt(0)) {
+                            if (t.name.match(new RegExp("\\" + e + "$", "i"))) return "";
+                        } else if (/(audio|video|image)\/\*/i.test(e)) {
+                            if (t.type.match(new RegExp("^" + e.replace(/\*/g, ".*") + "$", "i"))) return "";
+                        } else if (t.type.toLowerCase() == e.toLowerCase()) {
+                            return "";
+                        }
+                    }
+                    return context.props.accept_val_msg;
+                }
+
+                function updateValidationMessage(message) {
+                    if (message) {
+                        valElement.innerText = message;
+                        valElement.style.color = "red";
+                        valElement.style.display = "block";
+                    } else {
+                        valElement.innerText = "";
+                        valElement.style.display = "none";
+                    }
+                }
+            });
+        },
         updateFile(t) {
             dmx.nextTick(async function () {
                 var e = {
@@ -506,11 +510,11 @@ dmx.Actions({
                     type: t.type,
                     date: (t.lastModified ? new Date(t.lastModified) : t.lastModifiedDate).toISOString(),
                     dataUrl: null
-            }; - 1 === t.type.indexOf("image/") || t.reader || (t.reader = new FileReader, t.reader.onload = t => {
-                e.dataUrl = t.target.result, this.set("file", {
-                    ...e
-                })
-            }, t.reader.readAsDataURL(t)), this.file = t, this.set({
+                }; - 1 === t.type.indexOf("image/") || t.reader || (t.reader = new FileReader, t.reader.onload = t => {
+                    e.dataUrl = t.target.result, this.set("file", {
+                        ...e
+                    })
+                }, t.reader.readAsDataURL(t)), this.file = t, this.set({
                     file: e,
                     state: {
                         idle: !1,
@@ -564,9 +568,9 @@ dmx.Actions({
                 }
             }), this.dispatchEvent("start");
             const t = new XMLHttpRequest;
-            t.onabort = this.abortHandler, 
-            t.onerror = this.errorHandler,
-            t.open("POST", this.props.url);
+            t.onabort = this.abortHandler,
+                t.onerror = this.errorHandler,
+                t.open("POST", this.props.url);
             t.onload = function () {
                 let jsonResponse;
                 try {
@@ -592,7 +596,7 @@ dmx.Actions({
                         return;
                     }
                     if (jsonResponse && jsonResponse.url) {
-                      this.file && this.upload2(t);
+                        this.file && this.upload2(t);
                     } else {
                         console.error("Response URL parameter missing.");
                         this.set({
@@ -747,4 +751,5 @@ dmx.Actions({
                 this.input.type = "",
                 this.input.type = "file"
         }
-    });  
+    });
+    
