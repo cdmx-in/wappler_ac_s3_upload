@@ -90,6 +90,13 @@
               "defaultValue": ""
             },
             {
+              "name": "scInputName",
+              "attribute": "input_name",
+              "title": "Input name",
+              "type": "text",
+              "defaultValue": "s3_upload"
+            },
+            {
               "name": "s3uploadAccept",
               "attribute": "accept",
               "title": "Accept",

@@ -31,6 +31,9 @@ dmx.Actions({
             }
         },
         attributes: {
+            id: {
+                type: String,
+            },
             url: {
                 type: String,
                 default: null
@@ -38,6 +41,10 @@ dmx.Actions({
             val_url: {
                 type: String,
                 default: null
+            },
+            input_name: {
+                type: String,
+                default: "s3_upload"
             },
             prop: {
                 type: String,
@@ -115,14 +122,14 @@ dmx.Actions({
                 this.$node.addEventListener("click", this.clickHandler),
                 this.input = document.createElement("input"),
                 this.input.type = "file",
-                this.input.style.display = "none"
                 this.input.accept = this.props.accept || "*/*",
+                this.input.style.display = "none",
                 this.input.addEventListener("change",
                     this.changeHandler),
                 document
                     .getElementById(`${this.$node.id}`)
                     .appendChild(this.input)
-                this.$parse()
+            this.$parse()
         },
         init() {
             this.abortHandler = this.abortHandler.bind(this),
@@ -163,7 +170,7 @@ dmx.Actions({
                 var valElement = document.getElementById(`${this.$node.id}-val-msg`);
                 var validationMessage = "";
                 const fileSizeLimit = context.props.file_size_limit;
-
+                updateValidationMessage(validationMessage);
                 // Check file size
                 if (t.size > fileSizeLimit) {
                     validationMessage = `File size exceeds the limit of ${fileSizeLimit / (1024 * 1024)}MB.`;
@@ -504,18 +511,8 @@ dmx.Actions({
         },
         updateFile(t) {
             dmx.nextTick(async function () {
-                var e = {
-                    name: t.name,
-                    size: t.size,
-                    type: t.type,
-                    date: (t.lastModified ? new Date(t.lastModified) : t.lastModifiedDate).toISOString(),
-                    dataUrl: null
-                }; - 1 === t.type.indexOf("image/") || t.reader || (t.reader = new FileReader, t.reader.onload = t => {
-                    e.dataUrl = t.target.result, this.set("file", {
-                        ...e
-                    })
-                }, t.reader.readAsDataURL(t)), this.file = t, this.set({
-                    file: e,
+                this.file = t, this.set({
+                    file: t,
                     state: {
                         idle: !1,
                         ready: !0,
@@ -567,92 +564,33 @@ dmx.Actions({
                     done: !1
                 }
             }), this.dispatchEvent("start");
-            const t = new XMLHttpRequest;
-            t.onabort = this.abortHandler,
-                t.onerror = this.errorHandler,
-                t.open("POST", this.props.url);
-            t.onload = function () {
-                let jsonResponse;
+
+            const file = this.file; // Get the first selected file
+
+            if (file) {
+                const t = new XMLHttpRequest;
+
                 try {
-                    jsonResponse = JSON.parse(t.responseText);
-                } catch (error) {
-                    console.error("Failed to parse JSON response:", error);
+                    const formData = new FormData();
+                    formData.append(this.props.input_name, file); // 'file' is the key sent to the server
+                    this.xhr.open("POST", this.props.url);
+                    // this.xhr.setRequestHeader("Content-Type", "multipart/form-data");
+
+                    this.xhr.send(formData)
+                } catch (t) {
+                    this.errorHandler(t)
                 }
-                var valElement = document.getElementById(`${this.$node.id}-val-msg`);
-                if (t.status === 200) {
-                    valElement.style.display = "none";
-                    try {
-                        jsonResponse = JSON.parse(t.responseText);
-                    } catch (error) {
-                        console.error("Failed to parse JSON response:", error);
-                        this.set({
-                            state: {
-                                idle: !0,
-                                ready: !1,
-                                uploading: !1,
-                                done: !1
-                            }
-                        });
-                        return;
+            } else {
+                console.log('No file selected.');
+                this.set({
+                    state: {
+                        idle: !0,
+                        ready: !1,
+                        uploading: !1,
+                        done: !1
                     }
-                    if (jsonResponse && jsonResponse.url) {
-                        this.file && this.upload2(t);
-                    } else {
-                        console.error("Response URL parameter missing.");
-                        this.set({
-                            state: {
-                                idle: !0,
-                                ready: !1,
-                                uploading: !1,
-                                done: !1
-                            }
-                        });
-                        return;
-                    }
-                } else {
-                    console.error("Failed to sign request. Status code: " + t.status);
-                    this.set({
-                        state: {
-                            idle: !0,
-                            ready: !1,
-                            uploading: !1,
-                            done: !1
-                        },
-                        lastError: {
-                            status: t.status,
-                            message: "",
-                            response: jsonResponse
-                        }
-                    });
-                    this.dispatchEvent("error")
-                    if (t.status === 400) {
-                        jsonResponse = JSON.parse(t.responseText);
-                        valElement.innerText = jsonResponse.data.file;
-                        valElement.style.color = "red";
-                        valElement.style.display = "block";
-                    }
-                    return
-                }
-            }.bind(this);
-            t.setRequestHeader("Content-Type", "application/json");
-            var requestBody = {
-                name: this.file.name
-            };
-            this.props.sign_api_params.forEach(function (param) {
-                requestBody[param.key] = param.value;
-            });
-            t.send(JSON.stringify(requestBody));
-        },
-        upload2: function (t) {
-            try {
-                var e = JSON.parse(t.responseText),
-                    i = e[this.props.prop];
-                if (this.set("data", e), this.xhr.open("PUT", i), this.xhr.setRequestHeader("Content-Type", this.file.type), -1 != i.indexOf("x-amz-acl=")) {
-                    var s = i.substr(i.indexOf("x-amz-acl=") + 10); - 1 != s.indexOf("&") && (s = s.substr(0, s.indexOf("&"))), this.xhr.setRequestHeader("x-amz-acl", s)
-                }
-                this.xhr.send(this.file)
-            } catch (t) {
-                this.errorHandler(t)
+                });
+                return void this.onError("No file selected");
             }
         },
         abortHandler(t) {
@@ -746,10 +684,10 @@ dmx.Actions({
             this.input.click()
         },
         changeHandler(t) {
+            // console.log("Change", t);
             this.updateFile(t.target.files[0]),
                 this.input.value = "",
                 this.input.type = "",
                 this.input.type = "file"
         }
     });
-    
