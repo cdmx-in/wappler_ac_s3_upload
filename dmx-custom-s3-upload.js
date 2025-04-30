@@ -226,9 +226,7 @@ dmx.Actions({
                         return resolve(false);
                     }
                 }
-                formData.append('name', context.file.name);
-                formData.append('file', context.file);
-                formData.append('size', context.file.size);
+                formData.append(this.props.input_name, context.file);
                 // Append additional parameters from this.props.val_api_params to formData
                 this.props.val_api_params.forEach(function (param) {
                     formData.append(param.key, param.value);
