@@ -46,6 +46,10 @@ dmx.Actions({
                 type: String,
                 default: "s3_upload"
             },
+            include_file_data_upload: {
+                type: Boolean,
+                default: !1
+            },
             prop: {
                 type: String,
                 default: "url"
@@ -167,6 +171,10 @@ dmx.Actions({
         },
         validate: function (t, context) {
             return new Promise((resolve, reject) => {
+                if (!context.props.val_url) {
+                    resolve(true);
+                    return;
+                }
                 var valElement = document.getElementById(`${this.$node.id}-val-msg`);
                 var validationMessage = "";
                 const fileSizeLimit = context.props.file_size_limit;
@@ -226,7 +234,7 @@ dmx.Actions({
                         return resolve(false);
                     }
                 }
-                formData.append(this.props.input_name, context.file);
+                formData.append(context.props.input_name, context.file);
                 // Append additional parameters from this.props.val_api_params to formData
                 this.props.val_api_params.forEach(function (param) {
                     formData.append(param.key, param.value);
@@ -570,9 +578,11 @@ dmx.Actions({
 
                 try {
                     const formData = new FormData();
-                    formData.append(this.props.input_name, file); // 'file' is the key sent to the server
+                    formData.append("input_name", this.props.input_name); // 'file' is the key sent to the server
+                    if (this.props.include_file_data_upload) {
+                        formData.append(this.props.input_name, file); // 'file' is the key sent to the server
+                    }
                     this.xhr.open("POST", this.props.url);
-                    // this.xhr.setRequestHeader("Content-Type", "multipart/form-data");
 
                     this.xhr.send(formData)
                 } catch (t) {

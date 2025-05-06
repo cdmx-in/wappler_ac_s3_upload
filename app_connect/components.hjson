@@ -87,7 +87,8 @@
               "attribute": "val_url",
               "title": "Validation Url",
               "type": "text",
-              "defaultValue": ""
+              "defaultValue": "",
+              "help": "Leave blank if you don't want server-side validation."
             },
             {
               "name": "scInputName",
@@ -95,6 +96,14 @@
               "title": "Input name",
               "type": "text",
               "defaultValue": "s3_upload"
+            },
+            {
+              "name": "s3IncludeFileData",
+              "attribute": "include_file_data_upload",
+              "title": "Include File Data In Upload",
+              "type": "boolean",
+              "defaultValue": false,
+              "help": "If checked, the actual contents of the selected file will be included in the upload request."
             },
             {
               "name": "s3uploadAccept",
