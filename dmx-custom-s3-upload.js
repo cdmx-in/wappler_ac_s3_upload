@@ -181,7 +181,7 @@ dmx.Actions({
                 updateValidationMessage(validationMessage);
                 // Check file size
                 if (t.size > fileSizeLimit) {
-                    validationMessage = `File size exceeds the limit of ${fileSizeLimit / (1024 * 1024)}MB.`;
+                    validationMessage = `File size exceeds the limit of ${(fileSizeLimit / (1024 * 1024)).toFixed(2)}MB.`;
                     context.set({
                         data: null,
                         state: {
