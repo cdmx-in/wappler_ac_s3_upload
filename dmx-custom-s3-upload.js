@@ -175,7 +175,7 @@ dmx.Actions({
                     resolve(true);
                     return;
                 }
-                var valElement = document.getElementById(`${this.$node.id}-val-msg`);
+                var valElement = document.getElementById(`${this.props.id}-val-msg`);
                 var validationMessage = "";
                 const fileSizeLimit = context.props.file_size_limit;
                 updateValidationMessage(validationMessage);
@@ -659,7 +659,8 @@ dmx.Actions({
                     position: this.file.size,
                     total: this.file.size,
                     percent: 100
-                }
+                },
+                data: JSON.parse(this.xhr.responseText)
             }), this.dispatchEvent("success"),
                 this.dispatchEvent("done"))
         },
