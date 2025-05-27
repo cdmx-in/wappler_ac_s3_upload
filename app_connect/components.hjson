@@ -215,24 +215,24 @@
               ]
             },
             {
-              "name": "signApiParamConfig",
-              "title": "Configure Signing API Params",
-              "attribute": "signing_api_params",
+              "name": "apiParamConfig",
+              "title": "Configure API Params",
+              "attribute": "api_params",
               "type": "boolean",
               "defaultValue": false,
               "icon": "fa fa-lg fa-database",
               "groupIcon": "fa fa-lg fa-exchange",
               "display": "fieldset",
               "show": [
-                "signApiParams"
+                "apiParams"
               ],
               "noChangeOnHide": true,
               "groupEnabler": true,
-              "help": "This allows you to set additonal POST body parameters for Signing API."
+              "help": "This allows you to set additonal POST body parameters for API."
               "children": [
                 {
-                  "name": "signApiParams",
-                  "attribute": "dmx-bind:sign_api_params",
+                  "name": "apiParams",
+                  "attribute": "dmx-bind:api_params",
                   "title": "POST Params",
                   "type": "grid",
                   "jsonFormat": true,

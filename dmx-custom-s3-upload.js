@@ -95,7 +95,7 @@ dmx.Actions({
                 type: Array,
                 default: []
             },
-            sign_api_params: {
+            api_params: {
                 type: Array,
                 default: []
             },
@@ -594,7 +594,7 @@ dmx.Actions({
                     if (this.props.include_file_data_upload) {
                         formData.append(this.props.input_name, file); // 'file' is the key sent to the server
                     }
-                    this.props.sign_api_params.forEach(function (param) {
+                    this.props.api_params.forEach(function (param) {
                         formData.append(param.key, param.value);
                     });
                     this.xhr.open("POST", this.props.url);
