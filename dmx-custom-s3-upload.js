@@ -24,6 +24,11 @@ dmx.Actions({
                 total: 0,
                 percent: 0
             },
+            valApiResp: {
+              status: 0,
+              message: "",
+              response: null
+            },
             lastError: {
                 status: 0,
                 message: "",
@@ -243,7 +248,14 @@ dmx.Actions({
                 xhr.onerror = context.errorHandler;
                 xhr.open("POST", context.props.val_url);
                 xhr.onload = function () {
-                    let response = xhr.responseText;
+                  let response = xhr.responseText;
+                  context.set({
+                    valApiResp: {
+                      status: xhr.status,
+                      message: response,
+                      response: JSON.parse(response)
+                    }
+                    })
                     if (xhr.status < 200 || xhr.status >= 300) {
                         context.set({
                             data: null,

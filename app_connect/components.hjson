@@ -32,6 +32,28 @@
           ]
         },
         {
+          "name": "valResp",
+          "title": "valResp",
+          "type": "object",
+          "sub": [
+            {
+              "name": "status",
+              "title": "status",
+              "type": "number"
+            },
+            {
+              "name": "message",
+              "title": "message",
+              "type": "text"
+            },
+            {
+              "name": "response",
+              "title": "response",
+              "type": "text"
+            }
+          ]
+        },
+        {
           "name": "lastError",
           "title": "lastError",
           "type": "object",
