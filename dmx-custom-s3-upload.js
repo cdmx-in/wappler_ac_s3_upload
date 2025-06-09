@@ -25,9 +25,9 @@ dmx.Actions({
                 percent: 0
             },
             valApiResp: {
-              status: 0,
-              message: "",
-              response: null
+                status: 0,
+                message: "",
+                response: null
             },
             lastError: {
                 status: 0,
@@ -248,13 +248,22 @@ dmx.Actions({
                 xhr.onerror = context.errorHandler;
                 xhr.open("POST", context.props.val_url);
                 xhr.onload = function () {
-                  let response = xhr.responseText;
-                  context.set({
-                    valApiResp: {
-                      status: xhr.status,
-                      message: response,
-                      response: JSON.parse(response)
+                    let response = xhr.responseText;
+                    let parsedResponse = null;
+                    
+                    try {
+                        parsedResponse = JSON.parse(response);
+                    } catch (e) {
+                        console.error("Failed to parse validation response:", e);
+                        parsedResponse = null;
                     }
+                    
+                    context.set({
+                        valApiResp: {
+                            status: xhr.status,
+                            message: response,
+                            response: parsedResponse
+                        }
                     })
                     if (xhr.status < 200 || xhr.status >= 300) {
                         context.set({
@@ -273,7 +282,7 @@ dmx.Actions({
                             lastError: {
                                 status: xhr.status,
                                 message: response,
-                                response: JSON.parse(response)
+                                response: parsedResponse
                             }
                         });
                         dmx.nextTick(function () {
@@ -315,6 +324,7 @@ dmx.Actions({
                                         }
                                     });
                                     updateValidationMessage(validationMessage);
+                                    resolve(false);
                                     return;
                                 }
                                 var rows = content.split('\n').map(row => row.trim());
@@ -341,6 +351,7 @@ dmx.Actions({
                                         }
                                     });
                                     updateValidationMessage(validationMessage);
+                                    resolve(false);
                                     return;
                                 }
                                 if (numRows > context.props.csv_row_limit) {
@@ -366,6 +377,7 @@ dmx.Actions({
                                     });
                                     dmx.nextTick(function () {
                                         updateValidationMessage(validationMessage);
+                                        resolve(false);
                                     }, context);
                                     return;
                                 }
@@ -392,6 +404,7 @@ dmx.Actions({
                                         }
                                     });
                                     updateValidationMessage(validationMessage);
+                                    resolve(false);
                                     return;
                                 }
                                 let headerLength = headers.length;
@@ -420,32 +433,40 @@ dmx.Actions({
                                         }
                                         // Schema validation
                                         let invalidRecords = {};
-                                        if (val_csv_schema?.headers) {
+                                        if (typeof val_csv_schema !== 'undefined' && val_csv_schema?.headers) {
                                             val_csv_schema.headers.forEach((headerConfig, index) => {
-                                                let value = entry[headerConfig.name];
-                                                let isConditionMet = headerConfig.condition ? headerConfig.condition(entry) : true;
-                                                if (headerConfig.required && isConditionMet && (!value || value.trim() === '')) {
-                                                    const errorMessage = headerConfig.requiredError(headerConfig.name, i + 1, index + 1);
+                                                try {
+                                                    let value = entry[headerConfig.name];
+                                                    let isConditionMet = headerConfig.condition ? headerConfig.condition(entry) : true;
+                                                    if (headerConfig.required && isConditionMet && (!value || value.trim() === '')) {
+                                                        const errorMessage = headerConfig.requiredError(headerConfig.name, i + 1, index + 1);
+                                                        if (!invalidRecords[i + 1]) {
+                                                            invalidRecords[i + 1] = [];
+                                                        }
+                                                        invalidRecords[i + 1].push(`C${index + 1} [${errorMessage}]`);
+                                                    }
+                                                    if (value) {
+                                                        if (headerConfig.validate && !headerConfig.validate(value)) {
+                                                            const errorMessage = headerConfig.validateError(headerConfig.name, i + 1, index + 1);
+                                                            if (!invalidRecords[i + 1]) {
+                                                                invalidRecords[i + 1] = [];
+                                                            }
+                                                            invalidRecords[i + 1].push(`C${index + 1} [${errorMessage}]`);
+                                                        }
+                                                        if (headerConfig.dependentValidate && !headerConfig.dependentValidate(value, entry)) {
+                                                            const errorMessage = headerConfig.validateError(headerConfig.name, i + 1, index + 1);
+                                                            if (!invalidRecords[i + 1]) {
+                                                                invalidRecords[i + 1] = [];
+                                                            }
+                                                            invalidRecords[i + 1].push(`C${index + 1} [${errorMessage}]`);
+                                                        }
+                                                    }
+                                                } catch (validationError) {
+                                                    console.error("Schema validation error:", validationError);
                                                     if (!invalidRecords[i + 1]) {
                                                         invalidRecords[i + 1] = [];
                                                     }
-                                                    invalidRecords[i + 1].push(`C${index + 1} [${errorMessage}]`);
-                                                }
-                                                if (value) {
-                                                    if (headerConfig.validate && !headerConfig.validate(value)) {
-                                                        const errorMessage = headerConfig.validateError(headerConfig.name, i + 1, index + 1);
-                                                        if (!invalidRecords[i + 1]) {
-                                                            invalidRecords[i + 1] = [];
-                                                        }
-                                                        invalidRecords[i + 1].push(`C${index + 1} [${errorMessage}]`);
-                                                    }
-                                                    if (headerConfig.dependentValidate && !headerConfig.dependentValidate(value, entry)) {
-                                                        const errorMessage = headerConfig.validateError(headerConfig.name, i + 1, index + 1);
-                                                        if (!invalidRecords[i + 1]) {
-                                                            invalidRecords[i + 1] = [];
-                                                        }
-                                                        invalidRecords[i + 1].push(`C${index + 1} [${errorMessage}]`);
-                                                    }
+                                                    invalidRecords[i + 1].push(`C${index + 1} [Validation function error]`);
                                                 }
                                             });
                                         }
@@ -481,6 +502,7 @@ dmx.Actions({
                                         }
                                     });
                                     updateValidationMessage(invalidRecordMessage);
+                                    resolve(false);
                                 } else {
                                     context.set({
                                         data: {
@@ -488,7 +510,34 @@ dmx.Actions({
                                         }
                                     });
                                     updateValidationMessage();
+                                    resolve(true);
                                 }
+                            };
+                            reader.onerror = function (error) {
+                                console.error("Error reading CSV file:", error);
+                                validationMessage = "Error reading CSV file.";
+                                context.set({
+                                    data: null,
+                                    dataUrl: null,
+                                    state: {
+                                        idle: true,
+                                        ready: false,
+                                        uploading: false,
+                                        done: false
+                                    },
+                                    uploadProgress: {
+                                        position: 0,
+                                        total: 0,
+                                        percent: 0
+                                    },
+                                    lastError: {
+                                        status: 0,
+                                        message: "file_read_error",
+                                        response: null
+                                    }
+                                });
+                                updateValidationMessage(validationMessage);
+                                resolve(false);
                             };
                             reader.readAsText(t);
                         }
@@ -516,18 +565,34 @@ dmx.Actions({
                 }
 
                 function updateValidationMessage(message) {
-                    if (message) {
-                        valElement.innerText = message;
-                        valElement.style.color = "red";
-                        valElement.style.display = "block";
+                    if (valElement) {
+                        if (message) {
+                            valElement.innerText = message;
+                            valElement.style.color = "red";
+                            valElement.style.display = "block";
+                        } else {
+                            valElement.innerText = "";
+                            valElement.style.display = "none";
+                        }
                     } else {
-                        valElement.innerText = "";
-                        valElement.style.display = "none";
+                        console.warn("Validation message element not found");
                     }
                 }
             });
         },
         updateFile(t) {
+            const reader = new FileReader();
+            reader.addEventListener(
+                "load",
+                () => {
+                    // Store dataUrl in component state instead of modifying the file object
+                    this.set({
+                        dataUrl: reader.result
+                    });
+                },
+                false,
+            );
+            reader.readAsDataURL(t);
             dmx.nextTick(async function () {
                 this.file = t, this.set({
                     file: t,
@@ -554,6 +619,12 @@ dmx.Actions({
             this.abort(), this.file = null, this.set({
                 data: null,
                 file: null,
+                dataUrl: null,
+                valApiResp: {
+                    status: 0,
+                    message: "",
+                    response: null
+                },
                 state: {
                     idle: !0,
                     ready: !1,
@@ -660,21 +731,32 @@ dmx.Actions({
             this.errorHandler("Execution timeout")
         },
         loadHandler(t) {
-            this.xhr.status >= 400 ? this.errorHandler(this.xhr.responseText) : (this.set({
-                state: {
-                    idle: !1,
-                    ready: !1,
-                    uploading: !1,
-                    done: !0
-                },
-                uploadProgress: {
-                    position: this.file.size,
-                    total: this.file.size,
-                    percent: 100
-                },
-                data: JSON.parse(this.xhr.responseText)
-            }), this.dispatchEvent("success"),
-                this.dispatchEvent("done"))
+            if (this.xhr.status >= 400) {
+                this.errorHandler(this.xhr.responseText);
+            } else {
+                try {
+                    const responseData = JSON.parse(this.xhr.responseText);
+                    this.set({
+                        state: {
+                            idle: !1,
+                            ready: !1,
+                            uploading: !1,
+                            done: !0
+                        },
+                        uploadProgress: {
+                            position: this.file.size,
+                            total: this.file.size,
+                            percent: 100
+                        },
+                        data: responseData
+                    });
+                    this.dispatchEvent("success");
+                    this.dispatchEvent("done");
+                } catch (parseError) {
+                    console.error("Error parsing upload response:", parseError);
+                    this.errorHandler("Invalid response format from server");
+                }
+            }
         },
         progressHandler(t) {
             this.set({
@@ -708,7 +790,6 @@ dmx.Actions({
             this.input.click()
         },
         changeHandler(t) {
-            // console.log("Change", t);
             this.updateFile(t.target.files[0]),
                 this.input.value = "",
                 this.input.type = "",
