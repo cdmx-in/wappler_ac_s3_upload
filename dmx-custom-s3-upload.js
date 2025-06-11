@@ -102,16 +102,21 @@ dmx.Actions({
         },
         methods: {
             abort() {
-                this.abort()
+                this.xhr.abort();
             },
             reset() {
-                this.reset()
+                this.abort();
+                this._reset();
             },
             select() {
-                this.input.click()
+                this.input.click();
             },
             upload() {
-                this.upload()
+                if (this.file) {
+                    this._upload();
+                } else {
+                    console.warn("No file to upload");
+                }
             }
         },
 
@@ -250,14 +255,14 @@ dmx.Actions({
                 xhr.onload = function () {
                     let response = xhr.responseText;
                     let parsedResponse = null;
-                    
+
                     try {
                         parsedResponse = JSON.parse(response);
                     } catch (e) {
                         console.error("Failed to parse validation response:", e);
                         parsedResponse = null;
                     }
-                    
+
                     context.set({
                         valApiResp: {
                             status: xhr.status,
@@ -581,18 +586,6 @@ dmx.Actions({
             });
         },
         updateFile(t) {
-            const reader = new FileReader();
-            reader.addEventListener(
-                "load",
-                () => {
-                    // Store dataUrl in component state instead of modifying the file object
-                    this.set({
-                        dataUrl: reader.result
-                    });
-                },
-                false,
-            );
-            reader.readAsDataURL(t);
             dmx.nextTick(async function () {
                 this.file = t, this.set({
                     file: t,
@@ -605,18 +598,35 @@ dmx.Actions({
                 });
                 // Validate and upload
                 if (!(await this.validate(t, this))) {
+                    // Clear any existing dataUrl on validation failure
+                    this.set({
+                        dataUrl: null
+                    });
                     return;
                 }
+                const reader = new FileReader();
+                reader.addEventListener(
+                    "load",
+                    () => {
+                        // Store dataUrl in component state instead of modifying the file object
+                        this.set({
+                            dataUrl: reader.result
+                        });
+                    },
+                    false,
+                );
+                reader.readAsDataURL(t);
                 if (this.props.autoupload) {
-                    this.upload();
+                    this._upload();
                 }
             }, this);
         },
         abort: function () {
             this.xhr.abort()
         },
-        reset() {
-            this.abort(), this.file = null, this.set({
+        _reset() {
+            this.file = null;
+            this.set({
                 data: null,
                 file: null,
                 dataUrl: null,
@@ -643,8 +653,10 @@ dmx.Actions({
                 }
             })
         },
-        upload() {
-            if (!this.props.url) return void this.onError("No url attribute is set");
+        _upload() {
+            if (!this.props.url) {
+                return void this.errorHandler("No url attribute is set");
+            }
             this.set({
                 state: {
                     idle: !1,
@@ -654,23 +666,24 @@ dmx.Actions({
                 }
             }), this.dispatchEvent("start");
 
-            const file = this.file; // Get the first selected file
+            const file = this.file;
 
             if (file) {
-                const t = new XMLHttpRequest;
-
                 try {
                     const formData = new FormData();
-                    formData.append("input_name", this.props.input_name); // 'file' is the key sent to the server
+                    // Always include the file data with the specified input name
+                    formData.append(this.props.input_name, file);
+
+                    // Include any additional parameters if needed
                     if (this.props.include_file_data_upload) {
-                        formData.append(this.props.input_name, file); // 'file' is the key sent to the server
+                        formData.append("input_name", this.props.input_name);
                     }
                     this.props.api_params.forEach(function (param) {
                         formData.append(param.key, param.value);
                     });
                     this.xhr.open("POST", this.props.url);
 
-                    this.xhr.send(formData)
+                    this.xhr.send(formData);
                 } catch (t) {
                     this.errorHandler(t)
                 }
@@ -705,11 +718,12 @@ dmx.Actions({
                 this.dispatchEvent("done")
         },
         errorHandler(t) {
-            t instanceof ProgressEvent && (t = "Network error, perhaps no CORS set"), this.set({
+            this.set({
                 data: null,
+                dataUrl: null,
                 state: {
-                    idle: !1,
-                    ready: !0,
+                    idle: !0,
+                    ready: !1,
                     uploading: !1,
                     done: !1
                 },
@@ -719,20 +733,27 @@ dmx.Actions({
                     percent: 0
                 },
                 lastError: {
-                    status: 0,
-                    message: t.message || t,
-                    response: null
+                    status: t.status,
+                    message: "",
+                    response: JSON.parse(t.responseText)
                 }
-            }), console.error(t),
-                this.dispatchEvent("error"),
-                this.dispatchEvent("done")
+            });
+            this.dispatchEvent("error")
+            if (t.status === 400) {
+                jsonResponse = JSON.parse(t.responseText);
+                valElement.innerText = jsonResponse.data.file;
+                valElement.style.color = "red";
+                valElement.style.display = "block";
+            }
+            this.dispatchEvent("done")
+            return
         },
         timeoutHandler(t) {
             this.errorHandler("Execution timeout")
         },
         loadHandler(t) {
             if (this.xhr.status >= 400) {
-                this.errorHandler(this.xhr.responseText);
+                this.errorHandler(this.xhr);
             } else {
                 try {
                     const responseData = JSON.parse(this.xhr.responseText);
