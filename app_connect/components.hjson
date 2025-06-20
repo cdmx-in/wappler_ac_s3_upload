@@ -32,8 +32,8 @@
           ]
         },
         {
-          "name": "valResp",
-          "title": "valResp",
+          "name": "valApiResp",
+          "title": "valApiResp",
           "type": "object",
           "sub": [
             {
@@ -319,6 +319,457 @@
       ],
       "cssOrder": [],
       "jsOrder": []
+    },
+    {
+      "type": "dmx-custom-s3-multi-upload",
+      "selector": "dmx-custom-s3-multi-upload, [is=dmx-custom-s3-multi-upload]",
+      "groupTitle": "Forms",
+      "groupIcon": "fa fa-lg fa-file-text-o",
+      "title": "Custom S3 Multi Upload Control: @@id@@",
+      "icon": "fa fa-lg fa-cloud-upload-alt",
+      "state": "opened",
+      "anyParent": true,
+      "template": "<div id=\"@@id@@\" is=\"dmx-custom-s3-multi-upload\" url=\"\" accept=\"image/*\" class=\"text-center border\">\n<p dmx-show=\"filesData.length === 0\">Select files</p>\n<div dmx-show=\"filesData.length > 0\" class=\"file-list\">\n  <div dmx-repeat=\"filesData\" class=\"file-item\">\n    <p>{{name}}</p>\n  <button class=\"btn btn-sm btn-danger\" dmx-on:click.stop=\"@@id@@.removeFile($index)\" dmx-show=\"!state.uploading\">Remove</button>\n  </div>\n</div>\n<p dmx-hide=\"state.uploading\">\n  <button class=\"btn btn-primary\" dmx-on:click.stop=\"@@id@@.select()\" dmx-show=\"state.idle\">Browse</button>\n  <button class=\"btn btn-primary\" dmx-on:click.stop=\"@@id@@.upload()\" dmx-show=\"state.ready\">Upload</button>\n    <button class=\"btn btn-primary\" dmx-on:click.stop=\"@@id@@.select()\" dmx-show=\"state.ready\">Add More Files</button>\n <button class=\"btn btn-danger\" dmx-on:click.stop=\"@@id@@.reset()\" dmx-show=\"state.done\">Reset</button>\n</p>\n<p dmx-show=\"state.uploading\">\n  Total Progress: {{uploadProgress.percent}}%\n  <button class=\"btn btn-danger\" dmx-on:click.stop=\"@@id@@.abort()\">Abort All</button>\n</p>\n<p id=\"@@id@@-val-msg\"></p>\n</div>",
+      "baseName": "customs3multiupload",
+      "help": "AWS S3 multi-file upload component.",
+      "dataPick": true,
+      "dataScheme": [
+        {
+          "name": "data",
+          "title": "Data",
+          "type": "object",
+          "sub": [
+            {
+              "name": "filesData",
+              "title": "Files",
+              "type": "array",
+              "sub": [
+                {
+                  "name": "name",
+                  "title": "File Name",
+                  "type": "text"
+                },
+                {
+                  "name": "size",
+                  "title": "File Size",
+                  "type": "number"
+                },
+                {
+                  "name": "type",
+                  "title": "MIME Type",
+                  "type": "text"
+                },
+                {
+                  "name": "dataUrl",
+                  "title": "Data URL",
+                  "type": "text"
+                }
+              ]
+            },
+            {
+              "name": "output",
+              "title": "Server Response",
+              "type": "array"
+            }
+          ]
+        },
+        {
+          "name": "uploadProgress",
+          "title": "Upload Progress",
+          "type": "object",
+          "sub": [
+            {
+              "name": "totalBytes",
+              "title": "Total Bytes",
+              "type": "number"
+            },
+            {
+              "name": "uploadedBytes",
+              "title": "Uploaded Bytes",
+              "type": "number"
+            },
+            {
+              "name": "percent",
+              "title": "Overall Progress",
+              "type": "number"
+            },
+            {
+              "name": "fileProgress",
+              "title": "File Progress",
+              "type": "array",
+              "sub": [
+                {
+                  "name": "fileName",
+                  "title": "File Name",
+                  "type": "text"
+                },
+                {
+                  "name": "progress",
+                  "title": "Progress",
+                  "type": "number"
+                },
+                {
+                  "name": "status",
+                  "title": "Status",
+                  "type": "text"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "name": "uploadProgress",
+          "title": "Upload Progress",
+          "type": "object",
+          "sub": [
+            {
+              "name": "totalBytes",
+              "title": "Total Bytes",
+              "type": "number"
+            },
+            {
+              "name": "uploadedBytes",
+              "title": "Uploaded Bytes",
+              "type": "number"
+            },
+            {
+              "name": "percent",
+              "title": "Overall Progress",
+              "type": "number"
+            },
+            {
+              "name": "fileProgress",
+              "title": "File Progress",
+              "type": "array",
+              "sub": [
+                {
+                  "name": "fileName",
+                  "title": "File Name",
+                  "type": "text"
+                },
+                {
+                  "name": "progress",
+                  "title": "Progress",
+                  "type": "number"
+                },
+                {
+                  "name": "status",
+                  "title": "Status",
+                  "type": "text"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "name": "valApiResp",
+          "title": "Validation Response",
+          "type": "object",
+          "sub": [
+            {
+              "name": "status",
+              "title": "Status",
+              "type": "number"
+            },
+            {
+              "name": "message",
+              "title": "Message",
+              "type": "text"
+            },
+            {
+              "name": "response",
+              "title": "Response",
+              "type": "text"
+            }
+          ]
+        },
+        {
+          "name": "lastError",
+          "title": "Last Error",
+          "type": "object",
+          "sub": [
+            {
+              "name": "status",
+              "title": "Status",
+              "type": "number"
+            },
+            {
+              "name": "message",
+              "title": "Message",
+              "type": "text"
+            },
+            {
+              "name": "response",
+              "title": "Response",
+              "type": "text"
+            }
+          ]
+        }
+      ],
+      "outputType": "object",
+      "properties": [
+        {
+          "group": "S3 Multi Upload Properties",
+          "variables": [
+            {
+              "name": "theId",
+              "attribute": "id",
+              "title": "ID",
+              "type": "text",
+              "defaultValue": "",
+              "required": true
+            },
+            {
+              "name": "theClass",
+              "attribute": "class",
+              "title": "Class",
+              "type": "text",
+              "defaultValue": ""
+            },
+            {
+              "name": "url",
+              "attribute": "url",
+              "title": "Upload URL",
+              "type": "text",
+              "defaultValue": ""
+            },
+            {
+              "name": "val_url",
+              "attribute": "val_url",
+              "title": "Validation URL",
+              "type": "text",
+              "defaultValue": ""
+            },
+            {
+              "name": "accept",
+              "attribute": "accept",
+              "title": "Accept File Types",
+              "type": "text",
+              "defaultValue": "*/*"
+            },
+            {
+              "name": "accept_val_msg",
+              "attribute": "accept_val_msg",
+              "title": "Invalid File Type Message",
+              "type": "text",
+              "defaultValue": "Invalid file type."
+            },
+            {
+              "name": "file_size_limit",
+              "attribute": "file_size_limit",
+              "title": "File Size Limit (bytes)",
+              "type": "number",
+              "defaultValue": 2097152
+            },
+            {
+              "name": "total_size_limit",
+              "attribute": "total_size_limit",
+              "title": "Total Size Limit (bytes)",
+              "type": "number",
+              "defaultValue": 10485760
+            },
+            {
+              "name": "total_files_limit",
+              "attribute": "total_files_limit",
+              "title": "Total Files Limit",
+              "type": "number",
+              "defaultValue": 5
+            },
+            {
+              "name": "autoupload",
+              "attribute": "autoupload",
+              "title": "Auto Upload",
+              "type": "boolean",
+              "defaultValue": false
+            },
+            {
+              "name": "csv_row_limit",
+              "attribute": "csv_row_limit",
+              "title": "CSV Row Limit",
+              "type": "number",
+              "defaultValue": 10
+            },
+            {
+              "name": "csv_no_records_val_msg",
+              "attribute": "csv_no_records_val_msg",
+              "title": "CSV No Records Message",
+              "type": "text",
+              "defaultValue": "CSV has no records."
+            },
+            {
+              "name": "csv_limit_val_msg",
+              "attribute": "csv_limit_val_msg",
+              "title": "CSV Limit Message",
+              "type": "text",
+              "defaultValue": "CSV file exceeds row limit. Allowed limit 10"
+            },
+            {
+              "name": "val_resp_msg",
+              "attribute": "val_resp_msg",
+              "title": "Validation Failed Message",
+              "type": "text",
+              "defaultValue": "Validation failed."
+            },
+            {
+              "name": "scInputName",
+              "attribute": "input_name",
+              "title": "Input name",
+              "type": "text",
+              "defaultValue": "s3_upload",
+              "help": "The name of the file input field that will be sent to the server"
+            },
+            {
+              "name": "include_file_data_upload",
+              "attribute": "include_file_data_upload",
+              "title": "Include File Data",
+              "type": "boolean",
+              "defaultValue": false
+            },
+          ]
+        },
+        {
+          "group": "📒 API Parameters",
+          "variables": [
+            {
+              "name": "valApiParamConfig",
+              "title": "Configure Validate API Params",
+              "attribute": "validation_api_params",
+              "type": "boolean",
+              "defaultValue": false,
+              "icon": "fa fa-lg fa-database",
+              "groupIcon": "fa fa-lg fa-exchange",
+              "display": "fieldset",
+              "show": [
+                "valApiParams"
+              ],
+              "noChangeOnHide": true,
+              "groupEnabler": true,
+              "help": "This allows you to set additonal POST body parameters for validate API."
+              "children": [
+                {
+                  "name": "valApiParams",
+                  "attribute": "dmx-bind:val_api_params",
+                  "title": "POST Params",
+                  "type": "grid",
+                  "dataBindings": true,
+                  "jsonFormat": true,
+                  "encloseBT": true,
+                  "jsonBT": true,
+                  "initDisplay": "none",
+                  "columns": [
+                    {
+                      "field": "key",
+                      "caption": "Key",
+                      "size": "20%",
+                      "editable": {
+                        "type": "text"
+                      }
+                    },
+                    {
+                      "field": "value",
+                      "caption": "Value",
+                      "size": "35%",
+                      "editable": {
+                        "type": "datapicker"
+                      }
+                    },
+                  ],
+                  "newRecord": {
+                    "key": "",
+                    "value": ""
+                  }
+                }
+              ]
+            },
+            {
+              "name": "apiParamConfig",
+              "title": "Configure API Params",
+              "attribute": "api_params",
+              "type": "boolean",
+              "defaultValue": false,
+              "icon": "fa fa-lg fa-database",
+              "groupIcon": "fa fa-lg fa-exchange",
+              "display": "fieldset",
+              "show": [
+                "apiParams"
+              ],
+              "noChangeOnHide": true,
+              "groupEnabler": true,
+              "help": "This allows you to set additonal POST body parameters for API."
+              "children": [
+                {
+                  "name": "apiParams",
+                  "attribute": "dmx-bind:api_params",
+                  "title": "POST Params",
+                  "type": "grid",
+                  "jsonFormat": true,
+                  "encloseBT": true,
+                  "jsonBT": true,
+                  "defaultValue": [],
+                  "initDisplay": "none",
+                  "columns": [
+                    {
+                      "field": "key",
+                      "caption": "Key",
+                      "size": "20%",
+                      "editable": {
+                        "type": "text"
+                      }
+                    },
+                    {
+                      "field": "value",
+                      "caption": "Value",
+                      "size": "35%",
+                      "editable": {
+                        "type": "datapicker"
+                      }
+                    },
+                  ],
+                  "newRecord": {
+                    "key": "",
+                    "value": ""
+                  }
+                }
+              ]
+            }
+          ]
+        },
+      ],
+      "events": [
+        {
+          "group": "S3 Multi Upload Events",
+          "variables": [
+            {
+              "name": "start",
+              "title": "On Start"
+            },
+            {
+              "name": "done",
+              "title": "On Done"
+            },
+            {
+              "name": "error",
+              "title": "On Error"
+            },
+            {
+              "name": "invalid",
+              "title": "On Invalid"
+            },
+            {
+              "name": "abort",
+              "title": "On Abort"
+            },
+            {
+              "name": "success",
+              "title": "On Success"
+            },
+            {
+              "name": "upload",
+              "title": "On Upload Progress"
+            }
+          ]
+        }
+      ]
     }
   ],
   "attributes": [
