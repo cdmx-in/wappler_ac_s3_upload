@@ -848,6 +848,9 @@ dmx.Actions({
         initialData: {
             data: null,
             filesData: [],
+            file_size_limit: 2097152,
+            total_size_limit: 10485760,
+            total_files_limit: 5,
             state: {
                 idle: !0,
                 ready: !1,
@@ -1049,6 +1052,11 @@ dmx.Actions({
 
             this.files = [];
             this._filesData = [];
+            this.set({
+                file_size_limit: this.props.file_size_limit,
+                total_size_limit: this.props.total_size_limit,
+                total_files_limit: this.props.total_files_limit
+            });
         },
 
         performUpdate(t) {
@@ -1107,7 +1115,7 @@ dmx.Actions({
 
         validate: function (files, context) {
             // This function validates multiple files and returns true or false
-            const validationStart = performance.now();
+            // const validationStart = performance.now();
             // console.log('[Validation] Started at:', new Date().toISOString());
             // console.log(`[Validation] Processing ${files?.length || 0} files`);
 
@@ -1137,7 +1145,9 @@ dmx.Actions({
 
                 // Helper function to validate MIME type
                 function validateMimeType(file, context) {
+                    // console.log(`[Validation] Validating MIME type for file: ${file.name}`, file.type);
                     const acceptTypes = context.props.accept.split(/\s*,\s*/g);
+                    // console.log(`[Validation] Accept types: `, acceptTypes);
                     for (const type of acceptTypes) {
                         if (type.charAt(0) === ".") {
                             if (file.name.match(new RegExp("\\" + type + "$", "i"))) return "";
@@ -1147,7 +1157,7 @@ dmx.Actions({
                             return "";
                         }
                     }
-                    return context.props.accept_val_msg.replace("{file}", file.name);
+                    return context.props.accept_val_msg + ` for ${file.name}`;
                 }
 
                 // Helper function to read file as text
@@ -1284,7 +1294,7 @@ dmx.Actions({
                 }
 
                 // Check total size
-                const totalSizeStart = performance.now();
+                // const totalSizeStart = performance.now();
                 const totalSize = Array.from(files).reduce((sum, file) => sum + file.size, 0);
                 // console.log(`[Validation] Total size check: ${(totalSize / (1024 * 1024)).toFixed(2)}MB`);
 
@@ -1317,7 +1327,7 @@ dmx.Actions({
 
                 // Initial client-side validation (file size and MIME type)
                 async function initialValidation() {
-                    const fileSizeStart = performance.now();
+                    // const fileSizeStart = performance.now();
 
                     for (const file of Array.from(files)) {
                         // console.log(`[Validation] Processing file: ${file.name}`);
@@ -1334,6 +1344,7 @@ dmx.Actions({
                         if (context.props.accept) {
                             validationMessage = validateMimeType(file, context);
                             if (validationMessage) {
+                                // console.log(validationMessage);
                                 // console.log(`[Validation] Failed: MIME type check for ${file.name}`);
                                 validationMessages.push(validationMessage);
                                 continue;
@@ -1343,13 +1354,12 @@ dmx.Actions({
                         validFiles.push(file);
                     }
 
+                    // console.log(`[Validation] Initial validation completed. Valid files:`, validFiles, validationMessages);
+
                     // console.log(`[Validation] Initial validation time: ${performance.now() - fileSizeStart}ms`);
 
-                    // Update validation messages
-                    updateValidationMessage(validationMessages);
-
                     // If no valid files after initial checks, return false
-                    if (validFiles.length === 0) {
+                    if (validFiles.length === 0 || validationMessages.length > 0) {
                         // console.log(`[Validation] Failed: No valid files after initial checks. Total time: ${performance.now() - validationStart}ms`);
                         context.set({
                             data: null,
@@ -1370,12 +1380,14 @@ dmx.Actions({
                                 response: null
                             }
                         });
+                        // Update validation messages
+                        updateValidationMessage(validationMessages);
                         return resolve(false);
                     }
 
                     // If no server-side validation is required, proceed directly to CSV validation (if any)
                     if (!context.props.val_url) {
-                        const csvStart = performance.now();
+                        // const csvStart = performance.now();
                         // console.log('[Validation] Starting CSV validation (no server URL)');
 
                         const csvResults = await Promise.all(validFiles.map(file =>
@@ -1418,7 +1430,7 @@ dmx.Actions({
                     }
 
                     // Server-side validation
-                    const serverStart = performance.now();
+                    // const serverStart = performance.now();
                     // console.log('[Validation] Starting server-side validation');
 
                     const xhr = new XMLHttpRequest();
@@ -1488,7 +1500,7 @@ dmx.Actions({
                         }
 
                         // Perform CSV validation after successful server response
-                        const csvStart = performance.now();
+                        // const csvStart = performance.now();
                         // console.log('[Validation] Starting post-server CSV validation');
 
                         const csvResults = await Promise.all(validFiles.map(file =>
@@ -1679,7 +1691,7 @@ dmx.Actions({
         },
 
         _uploadFiles() {
-            const uploadStart = performance.now();
+            // const uploadStart = performance.now();
             // console.log('[Upload Flow] _uploadFiles started at:', new Date().toISOString());
 
             if (!this.props.url) {
@@ -1747,7 +1759,7 @@ dmx.Actions({
 
                 // console.log(`[Upload Flow] Starting upload of ${this.files.length} files. Total size: ${(totalBytes / (1024 * 1024)).toFixed(2)}MB`);
 
-                const uploadStart = performance.now();
+                // const uploadStart = performance.now();
                 this.xhr.open("POST", this.props.url);
                 this.xhr.send(formData);
 
@@ -1848,7 +1860,7 @@ dmx.Actions({
             this.errorHandler("Execution timeout")
         },
         errorHandler(t) {
-            console.log("Error handler triggered:", t);
+            // console.log("Error handler triggered:", t);
             this.set({
                 data: null,
                 dataUrl: null,

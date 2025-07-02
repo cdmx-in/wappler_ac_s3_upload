@@ -329,7 +329,7 @@
       "icon": "fa fa-lg fa-cloud-upload-alt",
       "state": "opened",
       "anyParent": true,
-      "template": "<div id=\"@@id@@\" is=\"dmx-custom-s3-multi-upload\" url=\"\" accept=\"image/*\" class=\"text-center border\">\n<p dmx-show=\"filesData.length === 0\">Select files</p>\n<div dmx-show=\"filesData.length > 0\" class=\"file-list\">\n  <div dmx-repeat=\"filesData\" class=\"file-item\">\n    <p>{{name}}</p>\n  <button class=\"btn btn-sm btn-danger\" dmx-on:click.stop=\"@@id@@.removeFile($index)\" dmx-show=\"!state.uploading\">Remove</button>\n  </div>\n</div>\n<p dmx-hide=\"state.uploading\">\n  <button class=\"btn btn-primary\" dmx-on:click.stop=\"@@id@@.select()\" dmx-show=\"state.idle\">Browse</button>\n  <button class=\"btn btn-primary\" dmx-on:click.stop=\"@@id@@.upload()\" dmx-show=\"state.ready\">Upload</button>\n    <button class=\"btn btn-primary\" dmx-on:click.stop=\"@@id@@.select()\" dmx-show=\"state.ready\">Add More Files</button>\n <button class=\"btn btn-danger\" dmx-on:click.stop=\"@@id@@.reset()\" dmx-show=\"state.done\">Reset</button>\n</p>\n<p dmx-show=\"state.uploading\">\n  Total Progress: {{uploadProgress.percent}}%\n  <button class=\"btn btn-danger\" dmx-on:click.stop=\"@@id@@.abort()\">Abort All</button>\n</p>\n<p id=\"@@id@@-val-msg\"></p>\n</div>",
+      "template": "<div id=\"@@id@@\" is=\"dmx-custom-s3-multi-upload\" url=\"\" accept=\"image/*\" class=\"text-center border\">\n<p dmx-show=\"filesData.length === 0\">Select files</p>\n<div dmx-show=\"filesData.length > 0\" class=\"file-list\">\n  <div dmx-repeat=\"filesData\" class=\"file-item\">\n    <p>{{name}}</p>\n  <button class=\"btn btn-sm btn-danger\" dmx-on:click.stop=\"@@id@@.removeFile($index)\" dmx-show=\"!state.uploading\">Remove</button>\n  </div>\n</div>\n<p dmx-hide=\"state.uploading\">\n  <button class=\"btn btn-primary\" dmx-on:click.stop=\"@@id@@.select()\" dmx-show=\"state.idle\">Browse</button>\n  <button class=\"btn btn-primary\" dmx-on:click.stop=\"@@id@@.upload()\" dmx-show=\"state.ready\">Upload</button>\n    <button class=\"btn btn-primary\" dmx-on:click.stop=\"@@id@@.select()\" dmx-show=\"state.ready&amp;&amp;filesData.length&lt;total_files_limit\">Add More Files</button>\n <button class=\"btn btn-danger\" dmx-on:click.stop=\"@@id@@.reset()\" dmx-show=\"state.done\">Reset</button>\n</p>\n<p dmx-show=\"state.uploading\">\n  Total Progress: {{uploadProgress.percent}}%\n  <button class=\"btn btn-danger\" dmx-on:click.stop=\"@@id@@.abort()\">Abort All</button>\n</p>\n<p id=\"@@id@@-val-msg\"></p>\n</div>",
       "baseName": "customs3multiupload",
       "help": "AWS S3 multi-file upload component.",
       "dataPick": true,
@@ -372,6 +372,21 @@
               "type": "array"
             }
           ]
+        },
+        {
+          "name": "file_size_limit",
+          "title": "Individual file size limit",
+          "type": "number"
+        },
+        {
+          "name": "total_size_limit",
+          "title": "Total files size limit",
+          "type": "number"
+        },
+        {
+          "name": "total_files_limit",
+          "title": "Total files limit",
+          "type": "number"
         },
         {
           "name": "uploadProgress",
