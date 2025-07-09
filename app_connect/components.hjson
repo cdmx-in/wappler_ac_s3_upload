@@ -750,41 +750,58 @@
           ]
         },
       ],
-      "events": [
+
+      "actionsScheme": [
         {
-          "group": "S3 Multi Upload Events",
-          "variables": [
-            {
-              "name": "start",
-              "title": "On Start"
-            },
-            {
-              "name": "done",
-              "title": "On Done"
-            },
-            {
-              "name": "error",
-              "title": "On Error"
-            },
-            {
-              "name": "invalid",
-              "title": "On Invalid"
-            },
-            {
-              "name": "abort",
-              "title": "On Abort"
-            },
-            {
-              "name": "success",
-              "title": "On Success"
-            },
-            {
-              "name": "upload",
-              "title": "On Upload Progress"
-            }
-          ]
+          "addTitle": "Abort",
+          "title": "Abort",
+          "name": "abort",
+          "icon": "fa fa-lg fa-times",
+          "state": "opened",
+          "help": "Abort the S3 Upload Control"
+        },
+        {
+          "addTitle": "Reset",
+          "title": "Reset",
+          "name": "reset",
+          "icon": "fa fa-lg fa-times-circle-o",
+          "state": "opened",
+          "help": "Reset the S3 Upload Control"
+        },
+        {
+          "addTitle": "Select",
+          "title": "Select",
+          "name": "select",
+          "icon": "fa fa-lg fa-times-circle-o",
+          "state": "opened",
+          "help": "Select file in the S3 Upload Control"
+        },
+        {
+          "addTitle": "Upload",
+          "title": "Upload",
+          "name": "upload",
+          "icon": "fa fa-lg fa-times-circle-o",
+          "state": "opened",
+          "help": "Start the Upload of the selected file in the S3 Upload Control"
         }
-      ]
+      ],
+      "children": [],
+      "allowed_children": {},
+      "copyFiles": [
+        {
+          "src": "dmx-custom-s3-upload.js",
+          "dst": "js/dmx-custom-s3-upload.js"
+        }
+      ],
+      "linkFiles": [
+        {
+          "src": "js/dmx-custom-s3-upload.js",
+          "type": "js",
+          "defer": true
+        }
+      ],
+      "cssOrder": [],
+      "jsOrder": []
     }
   ],
   "attributes": [
@@ -842,6 +859,7 @@
       ],
       "allowedOn": {
         "dmx-custom-s3-upload": true
+        "dmx-custom-s3-multi-upload": true
       }
     },
     {
@@ -874,6 +892,7 @@
       ],
       "allowedOn": {
         "dmx-custom-s3-upload": true
+        "dmx-custom-s3-multi-upload": true
       }
     },
   ],
@@ -910,6 +929,7 @@
       ],
       "allowedOn": {
         "dmx-custom-s3-upload": true
+        "dmx-custom-s3-multi-upload": true
       }
     },
     {
@@ -944,6 +964,7 @@
       ],
       "allowedOn": {
         "dmx-custom-s3-upload": true
+        "dmx-custom-s3-multi-upload": true
       }
     },
     {
@@ -978,6 +999,7 @@
       ],
       "allowedOn": {
         "dmx-custom-s3-upload": true
+        "dmx-custom-s3-multi-upload": true
       }
     },
     {
@@ -1012,6 +1034,7 @@
       ],
       "allowedOn": {
         "dmx-custom-s3-upload": true
+        "dmx-custom-s3-multi-upload": true
       }
     },
     {
@@ -1046,6 +1069,7 @@
       ],
       "allowedOn": {
         "dmx-custom-s3-upload": true
+        "dmx-custom-s3-multi-upload": true
       }
     }
   ],

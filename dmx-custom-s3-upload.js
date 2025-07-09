@@ -1268,7 +1268,7 @@ dmx.Actions({
 
                 if (totalFilesLimit && files.length > totalFilesLimit) {
                     // console.log(`[Validation] Failed: Total files exceed limit of ${totalFilesLimit}. Time: ${performance.now() - validationStart}ms`);
-                    validationMessages.push(`Total files exceed the limit of ${totalFilesLimit}.`);
+                    validationMessages.push(`You can upload a maximum of ${totalFilesLimit} files. Please remove additional files to proceed.`);
                     updateValidationMessage(validationMessages);
                     context.set({
                         data: null,
@@ -1336,7 +1336,7 @@ dmx.Actions({
                         // Check file size
                         if (file.size > fileSizeLimit) {
                             // console.log(`[Validation] Failed: File ${file.name} size check`);
-                            validationMessages.push(`File ${file.name} exceeds the limit of ${(fileSizeLimit / (1024 * 1024)).toFixed(2)}MB.`);
+                            validationMessages.push(`File ${file.name} exceeds the maximum allowed size of ${(fileSizeLimit / (1024 * 1024)).toFixed(2)} MB.`);
                             continue;
                         }
 
