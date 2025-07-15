@@ -889,7 +889,7 @@ dmx.Actions({
             },
             input_name: {
                 type: String,
-                default: "s3_upload"
+                default: "s3_upload[]"
             },
             include_file_data_upload: {
                 type: Boolean,
@@ -1323,6 +1323,33 @@ dmx.Actions({
                     });
                     return resolve(false);
                 }
+
+                async function getFileSHA256(file, chunkSize = 1024 * 1024) {
+                    try {
+                        let hash = null;
+                        let offset = 0;
+
+                        while (offset < file.size) {
+                            const slice = file.slice(offset, offset + chunkSize);
+                            const chunk = await slice.arrayBuffer();
+                            if (hash === null) {
+                                hash = await crypto.subtle.digest('SHA-256', chunk);
+                            } else {
+                                const combined = new Uint8Array(hash.byteLength + chunk.byteLength);
+                                combined.set(new Uint8Array(hash), 0);
+                                combined.set(new Uint8Array(chunk), hash.byteLength);
+                                hash = await crypto.subtle.digest('SHA-256', combined);
+                            }
+                            offset += chunkSize;
+                        }
+
+                        const hashArray = Array.from(new Uint8Array(hash));
+                        return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+                    } catch (error) {
+                        console.error('Client-side SHA-256 chunked error:', error);
+                        throw error;
+                    }
+                }
                 // console.log(`[Validation] Total size check passed. Time: ${performance.now() - totalSizeStart}ms`);
 
                 // Initial client-side validation (file size and MIME type)
@@ -1359,7 +1386,7 @@ dmx.Actions({
                     // console.log(`[Validation] Initial validation time: ${performance.now() - fileSizeStart}ms`);
 
                     // If no valid files after initial checks, return false
-                    if (validFiles.length === 0 || validationMessages.length > 0) {
+                    if (validFiles.length === 0) {
                         // console.log(`[Validation] Failed: No valid files after initial checks. Total time: ${performance.now() - validationStart}ms`);
                         context.set({
                             data: null,
@@ -1383,6 +1410,10 @@ dmx.Actions({
                         // Update validation messages
                         updateValidationMessage(validationMessages);
                         return resolve(false);
+                    }
+
+                    if (validationMessages.length > 0) {
+                        updateValidationMessage(validationMessages);
                     }
 
                     // If no server-side validation is required, proceed directly to CSV validation (if any)
@@ -1431,7 +1462,7 @@ dmx.Actions({
 
                     // Server-side validation
                     // const serverStart = performance.now();
-                    // console.log('[Validation] Starting server-side validation');
+                    console.log('[Validation] Starting server-side validation');
 
                     const xhr = new XMLHttpRequest();
                     const formData = new FormData();
@@ -1446,6 +1477,7 @@ dmx.Actions({
                     xhr.onerror = context.errorHandler;
                     xhr.open("POST", context.props.val_url);
                     xhr.onload = async function () {
+                        const xhrValidFiles = [];
                         // console.log(`[Validation] Server response received. Time: ${performance.now() - serverStart}ms`);
 
                         let response = xhr.responseText;
@@ -1499,11 +1531,62 @@ dmx.Actions({
                             return resolve(false);
                         }
 
+
+                        if (!parsedResponse.hasOwnProperty('validatedFiles')) {
+                            console.error("Invalid response structure:", parsedResponse);
+                            updateValidationMessage(["Invalid response structure from validation API. Response should contain 'validatedFiles'."]);
+                            dmx.nextTick(function () {
+                                this.dispatchEvent("error");
+                                this.set({
+                                    data: null,
+                                    state: {
+                                        idle: !0,
+                                        ready: !1,
+                                        uploading: !1,
+                                        done: !1
+                                    },
+                                    uploadProgress: {
+                                        position: 0,
+                                        total: 0,
+                                        percent: 0
+                                    },
+                                    lastError: {
+                                        status: 0,
+                                        message: validationMessages.join('\n\n'),
+                                        response: null
+                                    }
+                                });
+                            }, context);
+                            return resolve(false);
+                        } else {
+                            for (const file of validFiles) {
+                                let sha = await getFileSHA256(file);
+                                const matchedFile = parsedResponse.validatedFiles.find(file => file.fileData.sha256 === sha);
+
+                                if (!matchedFile) {
+                                    console.error(`File ${file.name} not found in server response.`);
+                                    validationMessages.push(`File ${file.name} not found in server response.`);
+                                } else {
+                                    if (!matchedFile.is_valid) {
+                                        validationMessages.push(matchedFile.message || `File ${matchedFile.fileData.name} is invalid.`);
+                                    } else {
+                                        xhrValidFiles.push(file);
+                                        context.files.push(file);
+                                    }
+                                }
+                                // return;
+                            }
+                            updateValidationMessage(validationMessages);
+
+                        }
+
+
+                        // console.log("context.files", context.files, validFiles);
                         // Perform CSV validation after successful server response
                         // const csvStart = performance.now();
                         // console.log('[Validation] Starting post-server CSV validation');
 
-                        const csvResults = await Promise.all(validFiles.map(file =>
+                        const csvResults = await Promise.all(xhrValidFiles.map(file =>
                             file.type.toLowerCase() === 'text/csv' ? validateCsvFile(file) : { valid: true, data: null } // Pass null for non-CSV data
                         ));
 
@@ -1538,7 +1621,7 @@ dmx.Actions({
                         }
 
                         // console.log(`[Validation] Success: All files valid including server check. Total time: ${performance.now() - validationStart}ms`);
-                        updateValidationMessage([]);
+                        // updateValidationMessage([]);
                         resolve(true);
                     };
 
@@ -1552,6 +1635,7 @@ dmx.Actions({
 
         updateFiles: async function (fileList) {
             fileList = [...fileList, ...this.files];
+            this.files = [];
             const seen = new Set();
             fileList = fileList.filter(file => {
                 const identifier = `${file.name}:${file.size}:${file.lastModified}`;
@@ -1561,11 +1645,26 @@ dmx.Actions({
                 seen.add(identifier);
                 return true; // Keep first occurrence
             });
+
+
+            if (!(await this.validate(fileList, this))) {
+                // Clear any existing files on validation failure
+                this.set(
+                    "filesData", []
+                );
+                // console.log("internal fileList:", this.files);
+                // this.files = [];
+                // return;
+            }
+
+
             // console.log("Updating files with new file list:", fileList);
-            const filesArray = Array.from(fileList);
+            const filesArray = Array.from(this.files);
+            // console.log("internal fileList after validation:", this.files);
 
             const files = await Promise.all(
                 filesArray.map(async (file) => {
+                    // console.log("Processing file:", file.name, file.size, file.type);
                     const dataUrl = await new Promise(resolve => {
                         const reader = new FileReader();
                         reader.onload = () => resolve(reader.result);
@@ -1579,25 +1678,10 @@ dmx.Actions({
                     };
                 })
             );
-            // console.log(`File objects created files`, files);
-
-
-            // console.log('Updating component state with file objects');
-            if (!(await this.validate(fileList, this))) {
-                // Clear any existing files on validation failure
-                this.set(
-                    "filesData", []
-                );
-                return;
-            }
 
             if (this.props.autoupload) {
-                // console.log('Auto-uploading files');
                 this._uploadFiles();
             }
-            // dmx.nextTick(async () => {
-            // console.log("Setting files in component state");
-            this.files = fileList;
             this._filesData = files;
             this.set(
                 "filesData", files
@@ -1686,6 +1770,7 @@ dmx.Actions({
         },
 
         changeHandler(t) {
+            // console.log("change", this.files);
             // console.log("Change handler triggered");
             this.updateFiles(t.target.files);
         },
@@ -1922,4 +2007,3 @@ dmx.Actions({
             this.dispatchEvent("done");
         }
     });
-
