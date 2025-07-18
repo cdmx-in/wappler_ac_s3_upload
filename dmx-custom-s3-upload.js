@@ -224,10 +224,10 @@ dmx.Actions({
                         context.set({
                             data: null,
                             state: {
-                                idle: true,
-                                ready: false,
-                                uploading: false,
-                                done: false
+                                idle: !0,
+                                ready: !1,
+                                uploading: !1,
+                                done: !1
                             },
                             uploadProgress: {
                                 position: 0,
@@ -313,10 +313,10 @@ dmx.Actions({
                                     context.set({
                                         data: null,
                                         state: {
-                                            idle: true,
-                                            ready: false,
-                                            uploading: false,
-                                            done: false
+                                            idle: !0,
+                                            ready: !1,
+                                            uploading: !1,
+                                            done: !1
                                         },
                                         uploadProgress: {
                                             position: 0,
@@ -526,10 +526,10 @@ dmx.Actions({
                                     data: null,
                                     dataUrl: null,
                                     state: {
-                                        idle: true,
-                                        ready: false,
-                                        uploading: false,
-                                        done: false
+                                        idle: !0,
+                                        ready: !1,
+                                        uploading: !1,
+                                        done: !1
                                     },
                                     uploadProgress: {
                                         position: 0,
@@ -837,7 +837,7 @@ dmx.Actions({
 
             var formData = new FormData();
             Array.from(files).forEach((file, index) => {
-                formData.append(`${this.props?.input_name || 's3_upload'}[]`, file);
+                formData.append(`${this.props?.input_name || 's3_upload[]'}`, file);
             });
 
             n.send(formData);
@@ -965,7 +965,6 @@ dmx.Actions({
             async removeFile(index) {
                 if (index >= 0 && index < this.files.length) {
                     const updatedFilesArray = Array.from(this.files).filter((_, i) => i !== index);
-                    // console.log("Removing file at index:", index, "Updated files array:", updatedFilesArray);
 
                     // Create a new DataTransfer object to hold the updated files
                     const dataTransfer = new DataTransfer();
@@ -974,7 +973,6 @@ dmx.Actions({
                     // Assign the new FileList back to this.files
                     this.files = dataTransfer.files;
 
-                    // console.log("Updated _filesData before removal:", this._filesData);
                     this._filesData = await Promise.all(
                         Array.from(this.files).map(async (file) => {
                             const dataUrl = await new Promise(resolve => {
@@ -990,7 +988,6 @@ dmx.Actions({
                             };
                         })
                     );
-                    // console.log("Updated _filesData after removal:", this._filesData);
                     this._updateFilesList();
                 }
             },
@@ -1060,7 +1057,6 @@ dmx.Actions({
         },
 
         performUpdate(t) {
-            // console.log("Performing update with props:", t);
             if (t.has("accept")) {
                 this.input.accept = this.props.accept || "*/*";
             }
@@ -1115,9 +1111,6 @@ dmx.Actions({
 
         validate: function (files, context) {
             // This function validates multiple files and returns true or false
-            // const validationStart = performance.now();
-            // console.log('[Validation] Started at:', new Date().toISOString());
-            // console.log(`[Validation] Processing ${files?.length || 0} files`);
 
             return new Promise((resolve, reject) => {
                 const valElement = document.getElementById(`${context.props.id}-val-msg`);
@@ -1145,9 +1138,7 @@ dmx.Actions({
 
                 // Helper function to validate MIME type
                 function validateMimeType(file, context) {
-                    // console.log(`[Validation] Validating MIME type for file: ${file.name}`, file.type);
                     const acceptTypes = context.props.accept.split(/\s*,\s*/g);
-                    // console.log(`[Validation] Accept types: `, acceptTypes);
                     for (const type of acceptTypes) {
                         if (type.charAt(0) === ".") {
                             if (file.name.match(new RegExp("\\" + type + "$", "i"))) return "";
@@ -1267,16 +1258,15 @@ dmx.Actions({
                 }
 
                 if (totalFilesLimit && files.length > totalFilesLimit) {
-                    // console.log(`[Validation] Failed: Total files exceed limit of ${totalFilesLimit}. Time: ${performance.now() - validationStart}ms`);
                     validationMessages.push(`You can upload a maximum of ${totalFilesLimit} files. Please remove additional files to proceed.`);
                     updateValidationMessage(validationMessages);
                     context.set({
                         data: null,
                         state: {
-                            idle: true,
-                            ready: false,
-                            uploading: false,
-                            done: false
+                            idle: !0,
+                            ready: !1,
+                            uploading: !1,
+                            done: !1
                         },
                         uploadProgress: {
                             position: 0,
@@ -1296,19 +1286,17 @@ dmx.Actions({
                 // Check total size
                 // const totalSizeStart = performance.now();
                 const totalSize = Array.from(files).reduce((sum, file) => sum + file.size, 0);
-                // console.log(`[Validation] Total size check: ${(totalSize / (1024 * 1024)).toFixed(2)}MB`);
 
                 if (totalSize > totalSizeLimit) {
-                    // console.log(`[Validation] Failed: Total size exceeds limit. Time: ${performance.now() - totalSizeStart}ms`);
                     validationMessages.push(`Total size exceeds the limit of ${(totalSizeLimit / (1024 * 1024)).toFixed(2)}MB.`);
                     updateValidationMessage(validationMessages);
                     context.set({
                         data: null,
                         state: {
-                            idle: true,
-                            ready: false,
-                            uploading: false,
-                            done: false
+                            idle: !0,
+                            ready: !1,
+                            uploading: !1,
+                            done: !1
                         },
                         uploadProgress: {
                             position: 0,
@@ -1350,19 +1338,15 @@ dmx.Actions({
                         throw error;
                     }
                 }
-                // console.log(`[Validation] Total size check passed. Time: ${performance.now() - totalSizeStart}ms`);
 
                 // Initial client-side validation (file size and MIME type)
                 async function initialValidation() {
-                    // const fileSizeStart = performance.now();
 
                     for (const file of Array.from(files)) {
-                        // console.log(`[Validation] Processing file: ${file.name}`);
                         let validationMessage = "";
 
                         // Check file size
                         if (file.size > fileSizeLimit) {
-                            // console.log(`[Validation] Failed: File ${file.name} size check`);
                             validationMessages.push(`File ${file.name} exceeds the maximum allowed size of ${(fileSizeLimit / (1024 * 1024)).toFixed(2)} MB.`);
                             continue;
                         }
@@ -1371,8 +1355,6 @@ dmx.Actions({
                         if (context.props.accept) {
                             validationMessage = validateMimeType(file, context);
                             if (validationMessage) {
-                                // console.log(validationMessage);
-                                // console.log(`[Validation] Failed: MIME type check for ${file.name}`);
                                 validationMessages.push(validationMessage);
                                 continue;
                             }
@@ -1381,20 +1363,15 @@ dmx.Actions({
                         validFiles.push(file);
                     }
 
-                    // console.log(`[Validation] Initial validation completed. Valid files:`, validFiles, validationMessages);
-
-                    // console.log(`[Validation] Initial validation time: ${performance.now() - fileSizeStart}ms`);
-
                     // If no valid files after initial checks, return false
-                    if (validFiles.length === 0) {
-                        // console.log(`[Validation] Failed: No valid files after initial checks. Total time: ${performance.now() - validationStart}ms`);
+                    if (validFiles.length === 0 || validationMessages.length > 0) {
                         context.set({
                             data: null,
                             state: {
-                                idle: true,
-                                ready: false,
-                                uploading: false,
-                                done: false
+                                idle: !0,
+                                ready: !1,
+                                uploading: !1,
+                                done: !1
                             },
                             uploadProgress: {
                                 position: 0,
@@ -1407,39 +1384,33 @@ dmx.Actions({
                                 response: null
                             }
                         });
+
+                        if (validFiles.length > 0) {
+                            context.files = validFiles;
+                        }
                         // Update validation messages
                         updateValidationMessage(validationMessages);
                         return resolve(false);
                     }
 
-                    if (validationMessages.length > 0) {
-                        updateValidationMessage(validationMessages);
-                    }
 
                     // If no server-side validation is required, proceed directly to CSV validation (if any)
                     if (!context.props.val_url) {
-                        // const csvStart = performance.now();
-                        // console.log('[Validation] Starting CSV validation (no server URL)');
-
                         const csvResults = await Promise.all(validFiles.map(file =>
                             file.type.toLowerCase() === 'text/csv' ? validateCsvFile(file) : { valid: true, data: null } // Pass null for non-CSV data
                         ));
 
-                        // console.log(`[Validation] CSV validation time (no server URL): ${performance.now() - csvStart}ms`);
-
                         const csvValidationMessages = csvResults.filter(result => !result.valid).map(result => result.message);
 
                         if (csvValidationMessages.length > 0) {
-                            // console.log(`[Validation] Failed: CSV validation errors (no server URL). Total time: ${performance.now() - validationStart}ms`);
                             validationMessages.push(...csvValidationMessages);
-                            updateValidationMessage(validationMessages);
                             context.set({
                                 data: null,
                                 state: {
-                                    idle: true,
-                                    ready: false,
-                                    uploading: false,
-                                    done: false
+                                    idle: !0,
+                                    ready: !1,
+                                    uploading: !1,
+                                    done: !1
                                 },
                                 uploadProgress: {
                                     position: 0,
@@ -1452,17 +1423,15 @@ dmx.Actions({
                                     response: null
                                 }
                             });
+                            updateValidationMessage(validationMessages);
                             return resolve(false);
                         }
 
-                        // console.log(`[Validation] Success: All files valid (no server URL). Total time: ${performance.now() - validationStart}ms`);
                         updateValidationMessage([]);
                         return resolve(true);
                     }
 
                     // Server-side validation
-                    // const serverStart = performance.now();
-                    console.log('[Validation] Starting server-side validation');
 
                     const xhr = new XMLHttpRequest();
                     const formData = new FormData();
@@ -1478,7 +1447,6 @@ dmx.Actions({
                     xhr.open("POST", context.props.val_url);
                     xhr.onload = async function () {
                         const xhrValidFiles = [];
-                        // console.log(`[Validation] Server response received. Time: ${performance.now() - serverStart}ms`);
 
                         let response = xhr.responseText;
                         let parsedResponse = null;
@@ -1499,14 +1467,13 @@ dmx.Actions({
                         });
 
                         if (xhr.status < 200 || xhr.status >= 300) {
-                            // console.log(`[Validation] Failed: Server validation. Status: ${xhr.status}. Total time: ${performance.now() - validationStart}ms`);
                             context.set({
                                 data: null,
                                 state: {
-                                    idle: true,
-                                    ready: false,
-                                    uploading: false,
-                                    done: false
+                                    idle: !0,
+                                    ready: !1,
+                                    uploading: !1,
+                                    done: !1
                                 },
                                 uploadProgress: {
                                     position: 0,
@@ -1576,35 +1543,52 @@ dmx.Actions({
                                 }
                                 // return;
                             }
-                            updateValidationMessage(validationMessages);
+
+                            if (validationMessages.length > 0) {
+                                dmx.nextTick(function () {
+                                    this.set({
+                                        data: null,
+                                        state: {
+                                            idle: !0,
+                                            ready: !1,
+                                            uploading: !1,
+                                            done: !1
+                                        },
+                                        uploadProgress: {
+                                            position: 0,
+                                            total: 0,
+                                            percent: 0
+                                        },
+                                        lastError: {
+                                            status: 0,
+                                            message: validationMessages.join('\n\n'),
+                                            response: null
+                                        }
+                                    });
+                                }, context);
+                                // Update validation messages
+                                updateValidationMessage(validationMessages);
+                                return resolve(false);
+                            }
 
                         }
-
-
-                        // console.log("context.files", context.files, validFiles);
-                        // Perform CSV validation after successful server response
-                        // const csvStart = performance.now();
-                        // console.log('[Validation] Starting post-server CSV validation');
 
                         const csvResults = await Promise.all(xhrValidFiles.map(file =>
                             file.type.toLowerCase() === 'text/csv' ? validateCsvFile(file) : { valid: true, data: null } // Pass null for non-CSV data
                         ));
 
-                        // console.log(`[Validation] Post-server CSV validation time: ${performance.now() - csvStart}ms`);
-
                         const csvValidationMessages = csvResults.filter(result => !result.valid).map(result => result.message);
 
                         if (csvValidationMessages.length > 0) {
-                            // console.log(`[Validation] Failed: CSV validation errors after server check. Total time: ${performance.now() - validationStart}ms`);
                             validationMessages.push(...csvValidationMessages);
                             updateValidationMessage(validationMessages);
                             context.set({
                                 data: null,
                                 state: {
-                                    idle: true,
-                                    ready: false,
-                                    uploading: false,
-                                    done: false
+                                    idle: !0,
+                                    ready: !1,
+                                    uploading: !1,
+                                    done: !1
                                 },
                                 uploadProgress: {
                                     position: 0,
@@ -1620,8 +1604,7 @@ dmx.Actions({
                             return resolve(false);
                         }
 
-                        // console.log(`[Validation] Success: All files valid including server check. Total time: ${performance.now() - validationStart}ms`);
-                        // updateValidationMessage([]);
+                        updateValidationMessage([]);
                         resolve(true);
                     };
 
@@ -1646,25 +1629,19 @@ dmx.Actions({
                 return true; // Keep first occurrence
             });
 
+            const isValid = await this.validate(fileList, this);
 
-            if (!(await this.validate(fileList, this))) {
+
+            if (!isValid) {
                 // Clear any existing files on validation failure
                 this.set(
                     "filesData", []
                 );
-                // console.log("internal fileList:", this.files);
-                // this.files = [];
-                // return;
             }
 
-
-            // console.log("Updating files with new file list:", fileList);
             const filesArray = Array.from(this.files);
-            // console.log("internal fileList after validation:", this.files);
-
             const files = await Promise.all(
                 filesArray.map(async (file) => {
-                    // console.log("Processing file:", file.name, file.size, file.type);
                     const dataUrl = await new Promise(resolve => {
                         const reader = new FileReader();
                         reader.onload = () => resolve(reader.result);
@@ -1688,13 +1665,12 @@ dmx.Actions({
             );
             this.set({
                 state: {
-                    idle: !1,
-                    ready: !0,
+                    idle: !isValid,
+                    ready: isValid,
                     uploading: !1,
                     done: !1
                 }
             });
-            // console.log("Completed Update Files");
             dmx.nextTick(function () {
                 this.dispatchEvent('updated');
             }, this);
@@ -1728,14 +1704,14 @@ dmx.Actions({
                     response: null
                 }
             })
+            this._showError("");
         },
         abort: function () {
             this.xhr.abort()
         },
 
         _showError(message) {
-            // console.log("Showing error message:", message);
-            const errorEl = document.getElementById(`${this.props.id}-error`);
+            const errorEl = document.getElementById(`${this.props.id}-val-msg`);
             if (errorEl) {
                 if (message) {
                     errorEl.textContent = message;
@@ -1765,22 +1741,16 @@ dmx.Actions({
         },
 
         clickHandler(t) {
-            // console.log("Click handler triggered");
             this.input.click()
         },
 
         changeHandler(t) {
-            // console.log("change", this.files);
-            // console.log("Change handler triggered");
             this.updateFiles(t.target.files);
         },
 
         _uploadFiles() {
-            // const uploadStart = performance.now();
-            // console.log('[Upload Flow] _uploadFiles started at:', new Date().toISOString());
 
             if (!this.props.url) {
-                // console.log('[Upload Flow] Error: No URL specified');
                 this._handleError("No url attribute is set");
                 return;
             }
@@ -1790,14 +1760,13 @@ dmx.Actions({
                 return;
             }
 
-            // console.log(this.files)
             const totalBytes = Array.from(this.files).reduce((sum, file) => sum + file.size, 0);
             this.set({
                 state: {
-                    idle: false,
-                    ready: false,
-                    uploading: true,
-                    done: false
+                    idle: !1,
+                    ready: !1,
+                    uploading: !0,
+                    done: !1
                 },
                 uploadProgress: {
                     totalBytes: totalBytes,
@@ -1812,7 +1781,6 @@ dmx.Actions({
             });
 
             this.dispatchEvent("start");
-            // console.log(`[Upload Flow] Preparing to upload ${this.files.length} files. Total size: ${(totalBytes / (1024 * 1024)).toFixed(2)}MB`);
 
             try {
                 const formData = new FormData();
@@ -1842,13 +1810,8 @@ dmx.Actions({
                 this.xhr.addEventListener("load", this.loadHandler);
                 this.xhr.upload.addEventListener("progress", this.progressHandler);
 
-                // console.log(`[Upload Flow] Starting upload of ${this.files.length} files. Total size: ${(totalBytes / (1024 * 1024)).toFixed(2)}MB`);
-
-                // const uploadStart = performance.now();
                 this.xhr.open("POST", this.props.url);
                 this.xhr.send(formData);
-
-                // console.log(`[Upload Flow] Request sent. Time to prepare: ${performance.now() - uploadStart}ms`);
 
             } catch (error) {
                 this.errorHandler(error);
@@ -1856,11 +1819,8 @@ dmx.Actions({
         },
 
         loadHandler(event) {
-            // const responseTime = performance.now();
-            // console.log('[Upload Flow] Response received at:', new Date().toISOString());
 
             if (this.xhr.status >= 400) {
-                // console.log(`[Upload Flow] Error: Server responded with status ${this.xhr.status}`);
                 this.errorHandler(this.xhr);
             } else {
                 try {
@@ -1897,7 +1857,6 @@ dmx.Actions({
         progressHandler(event) {
             if (event.lengthComputable) {
                 const percent = Math.ceil(event.loaded / event.total * 100);
-                // console.log(event, `[Upload Flow] Progress: ${percent}%. Uploaded: ${(event.loaded / (1024 * 1024)).toFixed(2)}MB / ${(event.total / (1024 * 1024)).toFixed(2)}MB`);
                 this.set({
                     state: {
                         idle: !1,
@@ -1945,7 +1904,6 @@ dmx.Actions({
             this.errorHandler("Execution timeout")
         },
         errorHandler(t) {
-            // console.log("Error handler triggered:", t);
             this.set({
                 data: null,
                 dataUrl: null,
@@ -1978,13 +1936,12 @@ dmx.Actions({
         },
 
         _handleError(message) {
-            // const totalBytes = this.files.reduce((sum, file) => sum + file.size, 0);
             this.set({
                 state: {
-                    idle: true,
-                    ready: true,
-                    uploading: false,
-                    done: false
+                    idle: !0,
+                    ready: !1,
+                    uploading: !1,
+                    done: !1
                 },
                 uploadProgress: {
                     totalBytes: totalBytes,
