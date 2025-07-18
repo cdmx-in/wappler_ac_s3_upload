@@ -1637,6 +1637,16 @@ dmx.Actions({
                 this.set(
                     "filesData", []
                 );
+            } else {
+                this.set(
+                    {
+                        lastError: {
+                            status: 0,
+                            message: "",
+                            response: null
+                        }
+                    }
+                )
             }
 
             const filesArray = Array.from(this.files);
@@ -1705,6 +1715,7 @@ dmx.Actions({
                 }
             })
             this._showError("");
+            this.input.value = "";
         },
         abort: function () {
             this.xhr.abort()
