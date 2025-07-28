@@ -1333,6 +1333,8 @@ dmx.Actions({
                             continue;
                         }
 
+                        totalSize += file.size;
+
                         validFiles.push(file);
                     }
 
@@ -1368,7 +1370,6 @@ dmx.Actions({
 
                     // Check total size
                     // const totalSizeStart = performance.now();
-                    totalSize = totalSize + file.size;
 
                     if (totalSize > totalSizeLimit) {
                         validationMessages.push(`Total size exceeds the limit of ${(totalSizeLimit / (1024 * 1024)).toFixed(2)}MB.`);
