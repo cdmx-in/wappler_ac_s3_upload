@@ -191,33 +191,7 @@ dmx.Actions({
                 const fileSizeLimit = context.props.file_size_limit;
                 updateValidationMessage(validationMessage);
                 // Check file size
-                if (t.size > fileSizeLimit) {
-                    validationMessage = `File size exceeds the limit of ${(fileSizeLimit / (1024 * 1024)).toFixed(2)}MB.`;
-                    context.set({
-                        data: null,
-                        state: {
-                            idle: !0,
-                            ready: !1,
-                            uploading: !1,
-                            done: !1
-                        },
-                        uploadProgress: {
-                            position: 0,
-                            total: 0,
-                            percent: 0
-                        },
-                        lastError: {
-                            status: 0,
-                            message: "file_size_exceeded",
-                            response: null
-                        }
-                    });
-                    updateValidationMessage(validationMessage);
-                    return resolve(false);
-                }
 
-                let xhr = new XMLHttpRequest();
-                let formData = new FormData();
                 if (context.props.accept) {
                     validationMessage = validateMimeType(t, context);
                     if (validationMessage !== "") {
@@ -245,6 +219,33 @@ dmx.Actions({
                         return resolve(false);
                     }
                 }
+                if (t.size > fileSizeLimit) {
+                    validationMessage = `File size exceeds the limit of ${(fileSizeLimit / (1024 * 1024)).toFixed(2)}MB.`;
+                    context.set({
+                        data: null,
+                        state: {
+                            idle: !0,
+                            ready: !1,
+                            uploading: !1,
+                            done: !1
+                        },
+                        uploadProgress: {
+                            position: 0,
+                            total: 0,
+                            percent: 0
+                        },
+                        lastError: {
+                            status: 0,
+                            message: "file_size_exceeded",
+                            response: null
+                        }
+                    });
+                    updateValidationMessage(validationMessage);
+                    return resolve(false);
+                }
+
+                let xhr = new XMLHttpRequest();
+                let formData = new FormData();
                 formData.append(context.props.input_name, context.file);
                 // Append additional parameters from this.props.val_api_params to formData
                 this.props.val_api_params.forEach(function (param) {
@@ -1283,35 +1284,6 @@ dmx.Actions({
 
                 }
 
-                // Check total size
-                // const totalSizeStart = performance.now();
-                const totalSize = Array.from(files).reduce((sum, file) => sum + file.size, 0);
-
-                if (totalSize > totalSizeLimit) {
-                    validationMessages.push(`Total size exceeds the limit of ${(totalSizeLimit / (1024 * 1024)).toFixed(2)}MB.`);
-                    updateValidationMessage(validationMessages);
-                    context.set({
-                        data: null,
-                        state: {
-                            idle: !0,
-                            ready: !1,
-                            uploading: !1,
-                            done: !1
-                        },
-                        uploadProgress: {
-                            position: 0,
-                            total: 0,
-                            percent: 0
-                        },
-                        lastError: {
-                            status: 0,
-                            message: validationMessages.join('\n\n'),
-                            response: null
-                        }
-                    });
-                    return resolve(false);
-                }
-
                 async function getFileSHA256(file, chunkSize = 1024 * 1024) {
                     try {
                         let hash = null;
@@ -1342,14 +1314,9 @@ dmx.Actions({
                 // Initial client-side validation (file size and MIME type)
                 async function initialValidation() {
 
+                    let totalSize = 0;
                     for (const file of Array.from(files)) {
                         let validationMessage = "";
-
-                        // Check file size
-                        if (file.size > fileSizeLimit) {
-                            validationMessages.push(`File ${file.name} exceeds the maximum allowed size of ${(fileSizeLimit / (1024 * 1024)).toFixed(2)} MB.`);
-                            continue;
-                        }
 
                         // Check MIME type
                         if (context.props.accept) {
@@ -1358,6 +1325,12 @@ dmx.Actions({
                                 validationMessages.push(validationMessage);
                                 continue;
                             }
+                        }
+
+                        // Check file size
+                        if (file.size > fileSizeLimit) {
+                            validationMessages.push(`File ${file.name} exceeds the maximum allowed size of ${(fileSizeLimit / (1024 * 1024)).toFixed(2)} MB.`);
+                            continue;
                         }
 
                         validFiles.push(file);
@@ -1390,6 +1363,35 @@ dmx.Actions({
                         }
                         // Update validation messages
                         updateValidationMessage(validationMessages);
+                        return resolve(false);
+                    }
+
+                    // Check total size
+                    // const totalSizeStart = performance.now();
+                    totalSize = totalSize + file.size;
+
+                    if (totalSize > totalSizeLimit) {
+                        validationMessages.push(`Total size exceeds the limit of ${(totalSizeLimit / (1024 * 1024)).toFixed(2)}MB.`);
+                        updateValidationMessage(validationMessages);
+                        context.set({
+                            data: null,
+                            state: {
+                                idle: !0,
+                                ready: !1,
+                                uploading: !1,
+                                done: !1
+                            },
+                            uploadProgress: {
+                                position: 0,
+                                total: 0,
+                                percent: 0
+                            },
+                            lastError: {
+                                status: 0,
+                                message: validationMessages.join('\n\n'),
+                                response: null
+                            }
+                        });
                         return resolve(false);
                     }
 
