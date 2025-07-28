@@ -1286,30 +1286,35 @@ dmx.Actions({
 
                 async function getFileSHA256(file, chunkSize = 1024 * 1024) {
                     try {
-                        let hash = null;
+                        const chunks = [];
                         let offset = 0;
 
                         while (offset < file.size) {
                             const slice = file.slice(offset, offset + chunkSize);
                             const chunk = await slice.arrayBuffer();
-                            if (hash === null) {
-                                hash = await crypto.subtle.digest('SHA-256', chunk);
-                            } else {
-                                const combined = new Uint8Array(hash.byteLength + chunk.byteLength);
-                                combined.set(new Uint8Array(hash), 0);
-                                combined.set(new Uint8Array(chunk), hash.byteLength);
-                                hash = await crypto.subtle.digest('SHA-256', combined);
-                            }
+                            chunks.push(new Uint8Array(chunk));
                             offset += chunkSize;
                         }
 
-                        const hashArray = Array.from(new Uint8Array(hash));
+                        // Combine all chunks into a single Uint8Array
+                        const totalLength = chunks.reduce((acc, curr) => acc + curr.length, 0);
+                        const combined = new Uint8Array(totalLength);
+                        let position = 0;
+                        for (const chunk of chunks) {
+                            combined.set(chunk, position);
+                            position += chunk.length;
+                        }
+
+                        // Hash once after combining
+                        const hashBuffer = await crypto.subtle.digest("SHA-256", combined);
+                        const hashArray = Array.from(new Uint8Array(hashBuffer));
                         return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
                     } catch (error) {
                         console.error('Client-side SHA-256 chunked error:', error);
                         throw error;
                     }
                 }
+
 
                 // Initial client-side validation (file size and MIME type)
                 async function initialValidation() {
