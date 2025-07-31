@@ -856,6 +856,7 @@ dmx.Actions({
                 idle: !0,
                 ready: !1,
                 uploading: !1,
+                validating: !1,
                 done: !1
             },
             uploadProgress: {
@@ -1637,6 +1638,16 @@ dmx.Actions({
                 return true; // Keep first occurrence
             });
 
+            this.set({
+                state: {
+                    idle: !1,
+                    ready: !1,
+                    uploading: !1,
+                    validating: !0,
+                    done: !1
+                }
+            });
+
             const isValid = await this.validate(fileList, this);
 
 
@@ -1686,6 +1697,7 @@ dmx.Actions({
                     idle: !isValid,
                     ready: isValid,
                     uploading: !1,
+                    validating: !1,
                     done: !1
                 }
             });
