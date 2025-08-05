@@ -177,8 +177,7 @@
               ],
               "noChangeOnHide": true,
               "groupEnabler": true,
-              "help": "This allows you to set additonal POST body parameters for validate API."
-              "children": [
+              "help": "This allows you to set additonal POST body parameters for validate API.""children": [
                 {
                   "name": "valApiParams",
                   "attribute": "dmx-bind:val_api_params",
@@ -228,8 +227,7 @@
               ],
               "noChangeOnHide": true,
               "groupEnabler": true,
-              "help": "This allows you to set additonal POST body parameters for API."
-              "children": [
+              "help": "This allows you to set additonal POST body parameters for API.""children": [
                 {
                   "name": "apiParams",
                   "attribute": "dmx-bind:api_params",
@@ -598,27 +596,6 @@
               "defaultValue": false
             },
             {
-              "name": "csv_row_limit",
-              "attribute": "csv_row_limit",
-              "title": "CSV Row Limit",
-              "type": "number",
-              "defaultValue": 10
-            },
-            {
-              "name": "csv_no_records_val_msg",
-              "attribute": "csv_no_records_val_msg",
-              "title": "CSV No Records Message",
-              "type": "text",
-              "defaultValue": "CSV has no records."
-            },
-            {
-              "name": "csv_limit_val_msg",
-              "attribute": "csv_limit_val_msg",
-              "title": "CSV Limit Message",
-              "type": "text",
-              "defaultValue": "CSV file exceeds row limit. Allowed limit 10"
-            },
-            {
               "name": "val_resp_msg",
               "attribute": "val_resp_msg",
               "title": "Validation Failed Message",
@@ -659,8 +636,7 @@
               ],
               "noChangeOnHide": true,
               "groupEnabler": true,
-              "help": "This allows you to set additonal POST body parameters for validate API."
-              "children": [
+              "help": "This allows you to set additonal POST body parameters for validate API.""children": [
                 {
                   "name": "valApiParams",
                   "attribute": "dmx-bind:val_api_params",
@@ -710,8 +686,7 @@
               ],
               "noChangeOnHide": true,
               "groupEnabler": true,
-              "help": "This allows you to set additonal POST body parameters for API."
-              "children": [
+              "help": "This allows you to set additonal POST body parameters for API.""children": [
                 {
                   "name": "apiParams",
                   "attribute": "dmx-bind:api_params",
@@ -750,7 +725,6 @@
           ]
         },
       ],
-
       "actionsScheme": [
         {
           "addTitle": "Abort",
@@ -862,8 +836,63 @@
           "isValue": true,
           "dataBindings": true,
           "type": "text",
-          "defaultValue": "CSV no records"
-          "help": "CSV no records message."
+          "defaultValue": "CSV no records""help": "CSV no records message."
+        }
+      ],
+      "allowedOn": {
+        "dmx-custom-s3-upload": true
+        "dmx-custom-s3-multi-upload": true
+      }
+    },
+    {
+      "name": "s3-upload-excel-options",
+      "attribute": "excel_options",
+      "title": "Excel Options",
+      "type": "boolean",
+      "display": "fieldset",
+      "icon": "fa fa-lg fa-chevron-right",
+      "groupTitle": "S3 Upload",
+      "groupIcon": "fa fa-lg fa-cloud-upload-alt",
+      "defaultValue": false,
+      "show": [
+        "s3uploadExcelRowLimit",
+        "s3uploadExcelRowLimitValMsg",
+        "s3uploadExcelNoRecordsValMsg"
+      ],
+      "noChangeOnHide": true,
+      "groupEnabler": true,
+      "children": [
+        {
+          "name": "s3uploadExcelRowLimit",
+          "attributeStartsWith": "dmx-bind",
+          "attribute": "excel_row_limit",
+          "isValue": true,
+          "dataBindings": true,
+          "title": "Excel Row Limit:",
+          "type": "text",
+          "help": "Excel file row limit.",
+          "initDisplay": "none"
+        },
+        {
+          "name": "s3uploadExcelRowLimitValMsg",
+          "attributeStartsWith": "dmx-bind",
+          "attribute": "excel_limit_val_msg",
+          "dataBindings": true,
+          "isValue": true,
+          "title": "Excel Limit Validation:",
+          "type": "text",
+          "help": "Excel limit validation message.",
+          "initDisplay": "none"
+        },
+        {
+          "name": "s3uploadExcelNoRecordsValMsg",
+          "attributeStartsWith": "dmx-bind",
+          "attribute": "excel_no_records_val_msg",
+          "title": "Excel No Records",
+          "isValue": true,
+          "dataBindings": true,
+          "type": "text",
+          "defaultValue": "Excel no records""help": "Excel no records message."
         }
       ],
       "allowedOn": {

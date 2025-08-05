@@ -88,6 +88,18 @@ dmx.Actions({
                 type: String,
                 default: "CSV file exceeds row limit. Allowed limit 10"
             },
+            excel_row_limit: {
+                type: Number,
+                default: 10
+            },
+            excel_no_records_val_msg: {
+                type: String,
+                default: "Excel has no records."
+            },
+            excel_limit_val_msg: {
+                type: String,
+                default: "Excel file exceeds row limit. Allowed limit 10"
+            },
             val_resp_msg: {
                 type: String,
                 default: "Validation failed."
@@ -254,7 +266,7 @@ dmx.Actions({
                 xhr.onabort = context.abortHandler;
                 xhr.onerror = context.errorHandler;
                 xhr.open("POST", context.props.val_url);
-                xhr.onload = function () {
+                xhr.onload = async function () {
                     let response = xhr.responseText;
                     let parsedResponse = null;
 
@@ -547,6 +559,230 @@ dmx.Actions({
                                 resolve(false);
                             };
                             reader.readAsText(t);
+                        } else if (t.type.toLowerCase() === 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' || t.type.toLowerCase() === 'application/vnd.ms-excel') {
+                            const file = t;
+                            const arrayBuffer = await new Promise((resolve, reject) => {
+                                const reader = new FileReader();
+                                reader.onload = () => resolve(reader.result);
+                                reader.onerror = () => reject(new Error('Error reading file'));
+                                reader.readAsArrayBuffer(file);
+                            });
+
+                            // Parse the Excel file using XLSX
+                            const workbook = XLSX.read(arrayBuffer, { type: 'array' });
+                            const sheetName = workbook.SheetNames[0]; // Get the first sheet
+                            const worksheet = workbook.Sheets[sheetName];
+
+                            // Convert sheet to JSON
+                            const jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1 }); // Get raw rows as arrays
+                            const numRows = jsonData.length - 1; // Subtract header
+
+                            // Check if file is empty
+                            if (jsonData.length === 0) {
+                                validationMessage = "Excel file is empty.";
+                                context.set({
+                                    data: null,
+                                    state: {
+                                        idle: !0,
+                                        ready: !1,
+                                        uploading: !1,
+                                        done: !1
+                                    },
+                                    uploadProgress: {
+                                        position: 0,
+                                        total: 0,
+                                        percent: 0
+                                    },
+                                    lastError: {
+                                        status: 0,
+                                        message: "",
+                                        response: null
+                                    }
+                                });
+                                updateValidationMessage(validationMessage);
+                                resolve(false);
+                                return;
+                            }
+
+                            // Check row count
+                            if (numRows < 1) {
+                                validationMessage = context.props.excel_no_records_val_msg;
+                                context.set({
+                                    data: null,
+                                    state: {
+                                        idle: !0,
+                                        ready: !1,
+                                        uploading: !1,
+                                        done: !1
+                                    },
+                                    uploadProgress: {
+                                        position: 0,
+                                        total: 0,
+                                        percent: 0
+                                    },
+                                    lastError: {
+                                        status: 0,
+                                        message: "",
+                                        response: null
+                                    }
+                                });
+                                updateValidationMessage(validationMessage);
+                                resolve(false);
+                                return;
+                            }
+                            if (numRows > context.props.excel_row_limit) {
+                                validationMessage = context.props.excel_limit_val_msg;
+                                context.set({
+                                    data: null,
+                                    state: {
+                                        idle: !0,
+                                        ready: !1,
+                                        uploading: !1,
+                                        done: !1
+                                    },
+                                    uploadProgress: {
+                                        position: 0,
+                                        total: 0,
+                                        percent: 0
+                                    },
+                                    lastError: {
+                                        status: 0,
+                                        message: "",
+                                        response: null
+                                    }
+                                });
+                                dmx.nextTick(function () {
+                                    updateValidationMessage(validationMessage);
+                                    resolve(false);
+                                }, context);
+                                return;
+                            }
+
+                            // Get headers
+                            const headers = jsonData[0];
+                            if (!headers || headers.length === 0) {
+                                validationMessage = "Excel file is missing a header row.";
+                                context.set({
+                                    data: null,
+                                    state: {
+                                        idle: !0,
+                                        ready: !1,
+                                        uploading: !1,
+                                        done: !1
+                                    },
+                                    uploadProgress: {
+                                        position: 0,
+                                        total: 0,
+                                        percent: 0
+                                    },
+                                    lastError: {
+                                        status: 0,
+                                        message: "",
+                                        response: null
+                                    }
+                                });
+                                updateValidationMessage(validationMessage);
+                                resolve(false);
+                                return;
+                            }
+
+                            const headerLength = headers.length;
+                            let invalidRecordMessages = [];
+
+                            // Validate rows
+                            for (let i = 1; i < jsonData.length; i++) {
+                                const row = jsonData[i];
+
+                                // Check for empty row
+                                if (!row || row.length === 0 || row.every(cell => cell == null || cell === '')) {
+                                    invalidRecordMessages.push(`File ${file.name}: Empty row found on line ${i + 1}`);
+                                    continue;
+                                }
+
+                                // Check column length
+                                if (row.length !== headerLength) {
+                                    invalidRecordMessages.push(`File ${file.name}: Invalid Record Length: columns length is ${headerLength}, got ${row.length} on line ${i + 1}`);
+                                }
+
+                                // Check for invalid characters
+                                if (row.some(cell => cell != null && /[^\x00-\x7F]+/.test(cell.toString()))) {
+                                    invalidRecordMessages.push(`File ${file.name}: Invalid characters found on line ${i + 1}`);
+                                }
+
+                                // Create entry object for schema validation
+                                let entry = {};
+                                for (let j = 0; j < headers.length; j++) {
+                                    entry[headers[j]] = row[j] != null ? row[j].toString() : '';
+                                }
+
+                                // Schema validation
+                                let invalidRecords = {};
+                                if (typeof val_excel_schema !== 'undefined' && val_excel_schema?.headers) {
+                                    val_excel_schema.headers.forEach((headerConfig, index) => {
+                                        try {
+                                            const value = entry[headerConfig.name];
+                                            const isConditionMet = headerConfig.condition ? headerConfig.condition(entry) : true;
+                                            if (headerConfig.required && isConditionMet && (!value || value.trim() === '')) {
+                                                const errorMessage = headerConfig.requiredError(headerConfig.name, i + 1, index + 1);
+                                                if (!invalidRecords[i + 1]) invalidRecords[i + 1] = [];
+                                                invalidRecords[i + 1].push(`C${index + 1} [${errorMessage}]`);
+                                            }
+                                            if (value && headerConfig.validate && !headerConfig.validate(value)) {
+                                                const errorMessage = headerConfig.validateError(headerConfig.name, i + 1, index + 1);
+                                                if (!invalidRecords[i + 1]) invalidRecords[i + 1] = [];
+                                                invalidRecords[i + 1].push(`C${index + 1} [${errorMessage}]`);
+                                            }
+                                            if (value && headerConfig.dependentValidate && !headerConfig.dependentValidate(value, entry)) {
+                                                const errorMessage = headerConfig.validateError(headerConfig.name, i + 1, index + 1);
+                                                if (!invalidRecords[i + 1]) invalidRecords[i + 1] = [];
+                                                invalidRecords[i + 1].push(`C${index + 1} [${errorMessage}]`);
+                                            }
+                                        } catch (validationError) {
+                                            console.error("Schema validation error:", validationError);
+                                            if (!invalidRecords[i + 1]) invalidRecords[i + 1] = [];
+                                            invalidRecords[i + 1].push(`C${index + 1} [Validation function error]`);
+                                        }
+                                    });
+                                }
+
+                                // Collect invalid record messages
+                                Object.keys(invalidRecords).forEach(rowNumber => {
+                                    invalidRecordMessages.push(`File ${file.name}: Row ${rowNumber}: ${invalidRecords[rowNumber].join(', ')}`);
+                                });
+                            }
+
+                            let invalidRecordMessage = invalidRecordMessages.join('\n\n');
+                            if (invalidRecordMessage) {
+                                context.set({
+                                    data: null,
+                                    state: {
+                                        idle: !0,
+                                        ready: !1,
+                                        uploading: !1,
+                                        done: !1
+                                    },
+                                    uploadProgress: {
+                                        position: 0,
+                                        total: 0,
+                                        percent: 0
+                                    },
+                                    lastError: {
+                                        status: 0,
+                                        message: "",
+                                        response: null
+                                    }
+                                });
+                                updateValidationMessage(invalidRecordMessage);
+                                resolve(false);
+                            } else {
+                                context.set({
+                                    data: {
+                                        output: jsonData
+                                    }
+                                });
+                                updateValidationMessage();
+                                resolve(true);
+                            }
                         }
                         else {
                             resolve(true);
@@ -937,6 +1173,18 @@ dmx.Actions({
                 type: String,
                 default: "CSV file exceeds row limit. Allowed limit 10"
             },
+            excel_row_limit: {
+                type: Number,
+                default: 10
+            },
+            excel_no_records_val_msg: {
+                type: String,
+                default: "Excel has no records."
+            },
+            excel_limit_val_msg: {
+                type: String,
+                default: "Excel file exceeds row limit. Allowed limit 10"
+            },
             val_resp_msg: {
                 type: String,
                 default: "Validation failed."
@@ -1285,10 +1533,10 @@ dmx.Actions({
 
                         // Check row count
                         if (numRows < 1) {
-                            return { valid: false, message: `File ${file.name}: ${context.props.csv_no_records_val_msg}` };
+                            return { valid: false, message: `File ${file.name}: ${context.props.excel_no_records_val_msg}` };
                         }
-                        if (numRows > context.props.csv_row_limit) {
-                            return { valid: false, message: `File ${file.name}: ${context.props.csv_limit_val_msg}` };
+                        if (numRows > context.props.excel_row_limit) {
+                            return { valid: false, message: `File ${file.name}: ${context.props.excel_limit_val_msg}` };
                         }
 
                         // Get headers
@@ -1328,8 +1576,8 @@ dmx.Actions({
 
                             // Schema validation
                             let invalidRecords = {};
-                            if (typeof val_csv_schema !== 'undefined' && val_csv_schema?.headers) {
-                                val_csv_schema.headers.forEach((headerConfig, index) => {
+                            if (typeof val_excel_schema !== 'undefined' && val_excel_schema?.headers) {
+                                val_excel_schema.headers.forEach((headerConfig, index) => {
                                     try {
                                         const value = entry[headerConfig.name];
                                         const isConditionMet = headerConfig.condition ? headerConfig.condition(entry) : true;
@@ -1520,23 +1768,31 @@ dmx.Actions({
 
                     // If no server-side validation is required, proceed directly to CSV validation (if any)
                     if (!context.props.val_url) {
-                        const csvResults = await Promise.all(validFiles.map(file =>
-                            file.type.toLowerCase() === 'text/csv' ? validateCsvFile(file) : { valid: true, data: null } // Pass null for non-CSV data
-                        ));
 
-                        const excelResults = await Promise.all(validFiles.map(file => {
-                            const fileType = file.type.toLowerCase();
-                            if (fileType === 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' || fileType === 'application/vnd.ms-excel') {
-                                return validateExcelFile(file);
+                        let i = 0;
+
+                        while (i < validFiles.length) {
+                            const file = validFiles[i];
+                            if (file.type.toLowerCase() === 'text/csv') {
+                                const result = await validateCsvFile(file);
+                                if (!result.valid) {
+                                    validationMessages.push(result.message);
+                                    validFiles.splice(i, 1); // Remove invalid file
+                                    continue;
+                                }
+                            } else if (file.type === 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' || file.type === 'application/vnd.ms-excel') {
+                                const result = await validateExcelFile(file);
+                                if (!result.valid) {
+                                    validationMessages.push(result.message);
+                                    validFiles.splice(i, 1); // Remove invalid file
+                                    continue;
+                                }
                             }
-                            return { valid: true, data: null }; // Pass null for non-Excel data
-                        }));
+                            i++; // Move to next file only if valid or non-CSV
+                        }
 
-                        const csvValidationMessages = csvResults.filter(result => !result.valid).map(result => result.message);
-                        const excelValidationMessages = excelResults.filter(result => !result.valid).map(result => result.message);
-
-                        if (csvValidationMessages.length > 0 || excelValidationMessages.length > 0) {
-                            validationMessages.push(...csvValidationMessages, ...excelValidationMessages);
+                        // If no valid files after initial checks, return false
+                        if (validFiles.length === 0 || validationMessages.length > 0) {
                             context.set({
                                 data: null,
                                 state: {
@@ -1556,6 +1812,11 @@ dmx.Actions({
                                     response: null
                                 }
                             });
+
+                            if (validFiles.length > 0) {
+                                context.files = validFiles;
+                            }
+                            // Update validation messages
                             updateValidationMessage(validationMessages);
                             return resolve(false);
                         }
@@ -1670,59 +1931,33 @@ dmx.Actions({
                                     if (!matchedFile.is_valid) {
                                         validationMessages.push(matchedFile.message || `File ${matchedFile.fileData.name} is invalid.`);
                                     } else {
-                                        xhrValidFiles.push(file);
+                                        if (file.type.toLowerCase() === 'text/csv') {
+                                            const result = await validateCsvFile(file);
+                                            if (!result.valid) {
+                                                validationMessages.push(result.message);
+                                                xhrValidFiles.splice(i, 1); // Remove invalid file
+                                                continue;
+                                            }
+                                        } else if (file.type === 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' || file.type === 'application/vnd.ms-excel') {
+                                            const result = await validateExcelFile(file);
+                                            if (!result.valid) {
+                                                validationMessages.push(result.message);
+                                                xhrValidFiles.splice(i, 1); // Remove invalid file
+                                                continue;
+                                            }
+                                        }
                                         context.files.push(file);
+                                        xhrValidFiles.push(file);
+                                        // context.files.push(file);
                                     }
                                 }
                                 // return;
                             }
 
-                            if (validationMessages.length > 0) {
-                                dmx.nextTick(function () {
-                                    this.set({
-                                        data: null,
-                                        state: {
-                                            idle: !0,
-                                            ready: !1,
-                                            uploading: !1,
-                                            done: !1
-                                        },
-                                        uploadProgress: {
-                                            position: 0,
-                                            total: 0,
-                                            percent: 0
-                                        },
-                                        lastError: {
-                                            status: 0,
-                                            message: validationMessages.join('\n\n'),
-                                            response: null
-                                        }
-                                    });
-                                }, context);
-                                // Update validation messages
-                                updateValidationMessage(validationMessages);
-                                return resolve(false);
-                            }
-
                         }
 
-                        const csvResults = await Promise.all(xhrValidFiles.map(file =>
-                            file.type.toLowerCase() === 'text/csv' ? validateCsvFile(file) : { valid: true, data: null } // Pass null for non-CSV data
-                        ));
-                        const excelResults = await Promise.all(validFiles.map(file => {
-                            const fileType = file.type.toLowerCase();
-                            if (fileType === 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' || fileType === 'application/vnd.ms-excel') {
-                                return validateExcelFile(file);
-                            }
-                            return { valid: true, data: null }; // Pass null for non-Excel data
-                        }));
-
-                        const csvValidationMessages = csvResults.filter(result => !result.valid).map(result => result.message);
-                        const excelValidationMessages = excelResults.filter(result => !result.valid).map(result => result.message);
-
-                        if (csvValidationMessages.length > 0 || excelValidationMessages.length > 0) {
-                            validationMessages.push(...csvValidationMessages, ...excelValidationMessages);
-                            updateValidationMessage(validationMessages);
+                        // If no valid files after initial checks, return false
+                        if (xhrValidFiles.length === 0 || validationMessages.length > 0) {
                             context.set({
                                 data: null,
                                 state: {
@@ -1742,6 +1977,12 @@ dmx.Actions({
                                     response: null
                                 }
                             });
+
+                            // if (xhrValidFiles.length > 0) {
+                            //     context.files = xhrValidFiles;
+                            // }
+                            // Update validation messages
+                            updateValidationMessage(validationMessages);
                             return resolve(false);
                         }
 
