@@ -306,11 +306,20 @@
         {
           "src": "dmx-custom-s3-upload.js",
           "dst": "js/dmx-custom-s3-upload.js"
+        },
+        {
+          "src": "xlsx.full.min.js",
+          "dst": "js/xlsx.full.min.js"
         }
       ],
       "linkFiles": [
         {
           "src": "js/dmx-custom-s3-upload.js",
+          "type": "js",
+          "defer": true
+        },
+        {
+          "src": "js/xlsx.full.min.js",
           "type": "js",
           "defer": true
         }
@@ -776,7 +785,7 @@
           "src": "js/dmx-custom-s3-upload.js",
           "type": "js",
           "defer": true
-        }
+        },
         {
           "src": "js/xlsx.full.min.js",
           "type": "js",
