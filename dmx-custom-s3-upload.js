@@ -431,7 +431,7 @@ dmx.Actions({
                                 let jsonData = [];
                                 for (let i = 1; i < rows.length; i++) {
                                     if (rows[i].length > 0) {
-                                        let data = rows[i].split(',');
+                                        let data = splitCSVLine(rows[i]);
                                         // Check for mismatched quotes
                                         let quotesCount = (rows[i].match(/"/g) || []).length;
                                         if (quotesCount % 2 !== 0) {
@@ -791,6 +791,24 @@ dmx.Actions({
                 };
 
                 xhr.send(formData);
+
+                const splitCSVLine = function (line) {
+                    const fields = [];
+                    let field = '';
+                    let inQuotes = false;
+                    for (let char of line) {
+                        if (char === '"') {
+                            inQuotes = !inQuotes;
+                        } else if (char === ',' && !inQuotes) {
+                            fields.push(field);
+                            field = '';
+                        } else {
+                            field += char;
+                        }
+                    }
+                    fields.push(field);
+                    return fields;
+                }
 
                 function validateMimeType(t, context) {
                     var acceptTypes = context.props.accept.split(/\s*,\s*/g);
@@ -1411,6 +1429,24 @@ dmx.Actions({
                     });
                 }
 
+                const splitCSVLine = function (line) {
+                    const fields = [];
+                    let field = '';
+                    let inQuotes = false;
+                    for (let char of line) {
+                        if (char === '"') {
+                            inQuotes = !inQuotes;
+                        } else if (char === ',' && !inQuotes) {
+                            fields.push(field);
+                            field = '';
+                        } else {
+                            field += char;
+                        }
+                    }
+                    fields.push(field);
+                    return fields;
+                }
+
                 // Helper function to validate CSV content
                 async function validateCsvFile(file) {
                     try {
@@ -1443,7 +1479,7 @@ dmx.Actions({
                                 break;
                             }
 
-                            const data = rows[i].split(',');
+                            const data = splitCSVLine(rows[i]);
                             const quotesCount = (rows[i].match(/"/g) || []).length;
                             if (quotesCount % 2 !== 0) {
                                 invalidRecordMessages.push(`File ${file.name}: Mismatched quotes on line ${i + 1}`);
@@ -1935,14 +1971,12 @@ dmx.Actions({
                                             const result = await validateCsvFile(file);
                                             if (!result.valid) {
                                                 validationMessages.push(result.message);
-                                                xhrValidFiles.splice(i, 1); // Remove invalid file
                                                 continue;
                                             }
                                         } else if (file.type === 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' || file.type === 'application/vnd.ms-excel') {
                                             const result = await validateExcelFile(file);
                                             if (!result.valid) {
                                                 validationMessages.push(result.message);
-                                                xhrValidFiles.splice(i, 1); // Remove invalid file
                                                 continue;
                                             }
                                         }
