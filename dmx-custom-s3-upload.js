@@ -575,6 +575,11 @@ dmx.Actions({
 
                             // Convert sheet to JSON
                             const jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1 }); // Get raw rows as arrays
+                            for (let i = jsonData.length - 1; i >= 0; i--) {
+                                if (jsonData[i].length === 0) {
+                                    jsonData.splice(i, 1); // remove the empty sub-array
+                                }
+                            }
                             const numRows = jsonData.length - 1; // Subtract header
 
                             // Check if file is empty
@@ -1560,6 +1565,11 @@ dmx.Actions({
 
                         // Convert sheet to JSON
                         const jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1 }); // Get raw rows as arrays
+                        for (let i = jsonData.length - 1; i >= 0; i--) {
+                            if (jsonData[i].length === 0) {
+                                jsonData.splice(i, 1); // remove the empty sub-array
+                            }
+                        }
                         const numRows = jsonData.length - 1; // Subtract header
 
                         // Check if file is empty
