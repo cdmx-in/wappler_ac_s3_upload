@@ -574,7 +574,7 @@ dmx.Actions({
                             const worksheet = workbook.Sheets[sheetName];
 
                             // Convert sheet to JSON
-                            const jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1 }); // Get raw rows as arrays
+                            const jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1, defval: '' }); // Get raw rows as arrays
                             for (let i = jsonData.length - 1; i >= 0; i--) {
                                 if (jsonData[i].length === 0) {
                                     jsonData.splice(i, 1); // remove the empty sub-array
@@ -1564,7 +1564,7 @@ dmx.Actions({
                         const worksheet = workbook.Sheets[sheetName];
 
                         // Convert sheet to JSON
-                        const jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1 }); // Get raw rows as arrays
+                        const jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1, defval: '' }); // Get raw rows as arrays
                         for (let i = jsonData.length - 1; i >= 0; i--) {
                             if (jsonData[i].length === 0) {
                                 jsonData.splice(i, 1); // remove the empty sub-array
