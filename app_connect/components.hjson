@@ -308,7 +308,7 @@
           "dst": "js/dmx-custom-s3-upload.js"
         },
         {
-          "src": "../../../node_modules/xlsx/dist/xlsx.full.min.js",
+          "src": "xlsx.full.min.js",
           "dst": "js/xlsx.full.min.js"
         }
       ],
@@ -776,7 +776,7 @@
           "dst": "js/dmx-custom-s3-upload.js"
         },
         {
-          "src": "../../../node_modules/xlsx/dist/xlsx.full.min.js",
+          "src": "xlsx.full.min.js",
           "dst": "js/xlsx.full.min.js"
         }
       ],
